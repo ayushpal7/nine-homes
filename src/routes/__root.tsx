@@ -86,8 +86,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Zero9Home.com — Curating Delhi NCR's Finest Homes" },
       { name: "twitter:description", content: "24+ years of trusted real estate expertise across Delhi, Gurgaon, Noida, Greater Noida, Faridabad and Ghaziabad. Buy, rent or list with Zero9Home." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/757d2906-25c8-40e1-a501-d716977eb044/id-preview-50cc0fbe--920ec637-3784-46d3-ab86-e270018df7b5.lovable.app-1782269699630.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/757d2906-25c8-40e1-a501-d716977eb044/id-preview-50cc0fbe--920ec637-3784-46d3-ab86-e270018df7b5.lovable.app-1782269699630.png" },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/77833879-0c05-4d25-be22-f6c2f191a609/id-preview-c45186dc--920ec637-3784-46d3-ab86-e270018df7b5.lovable.app-1782269845457.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/77833879-0c05-4d25-be22-f6c2f191a609/id-preview-c45186dc--920ec637-3784-46d3-ab86-e270018df7b5.lovable.app-1782269845457.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
