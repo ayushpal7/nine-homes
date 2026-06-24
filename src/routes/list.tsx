@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import emailjs from "@emailjs/browser";
+import { supabase } from "@/integrations/supabase/client";
 import {
   EMAILJS_PUBLIC_KEY,
   EMAILJS_SERVICE_ID,
@@ -58,7 +59,16 @@ function ListPage() {
       payload.image_count = String(images.length);
       payload.image_names = images.map((i) => i.name).join(", ");
       payload.image_1 = images[0]?.data?.slice(0, 45000) || "";
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_LIST, payload, { publicKey: EMAILJS_PUBLIC_KEY });
+      await Promise.all([
+        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_LIST, payload, { publicKey: EMAILJS_PUBLIC_KEY }),
+        supabase.from("listing_submissions").insert({
+          purpose: payload.purpose, category: payload.category,
+          name: payload.name, mobile: payload.mobile, email: payload.email || null,
+          city: payload.city, address: payload.address, pincode: payload.pincode,
+          size: payload.size, price: payload.price, spec_details: payload.spec_details,
+          image_names: payload.image_names, image_count: images.length,
+        }),
+      ]);
       setStatus("ok");
       formRef.current.reset();
       setImages([]);
