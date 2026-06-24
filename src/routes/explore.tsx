@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import emailjs from "@emailjs/browser";
+import { supabase } from "@/integrations/supabase/client";
 import {
   EMAILJS_PUBLIC_KEY,
   EMAILJS_SERVICE_ID,
@@ -40,8 +41,17 @@ function ExplorePage() {
     e.preventDefault();
     if (!formRef.current) return;
     setStatus("sending");
+    const fd = new FormData(formRef.current);
+    const get = (k: string) => String(fd.get(k) ?? "");
     try {
-      await emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_EXPLORE, formRef.current, { publicKey: EMAILJS_PUBLIC_KEY });
+      await Promise.all([
+        emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_EXPLORE, formRef.current, { publicKey: EMAILJS_PUBLIC_KEY }),
+        supabase.from("inquiries").insert({
+          intent: get("intent") || type, category: get("category"), city: get("city"),
+          name: get("name"), mobile: get("mobile"), email: get("email") || null,
+          budget: get("budget"), sector: get("sector"), requirements: get("requirements"),
+        }),
+      ]);
       setStatus("ok");
       formRef.current.reset();
     } catch (err) {

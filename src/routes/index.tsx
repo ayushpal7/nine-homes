@@ -97,47 +97,66 @@ function WhyUs() {
 }
 
 /* ---------------- FEATURED ---------------- */
+type FeaturedRow = {
+  id: string; title: string; location: string; price: string; tag: string;
+  bhk: string | null; size: string | null; description: string | null;
+  image_urls: string[];
+};
+
 function Featured() {
-  const listings = [
-    { title: "Premium 3 BHK Builder Floor", loc: "Greater Kailash, Delhi", price: "₹1.45 Crore", tag: "Buy", bhk: "3 BHK", size: "1650 sq.ft." },
-    { title: "Luxury 4 BHK Villa", loc: "DLF Phase 5, Gurgaon", price: "₹3.50 Crore", tag: "Buy", bhk: "4 BHK", size: "3200 sq.ft." },
-    { title: "Elegant 2 BHK Apartment", loc: "Sector 150, Noida", price: "₹45,000 / month", tag: "Rent", bhk: "2 BHK", size: "1250 sq.ft." },
-  ];
+  const [listings, setListings] = useState<FeaturedRow[]>([]);
+  useEffect(() => {
+    supabase.from("featured_properties").select("*").eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: false })
+      .then(({ data }) => setListings((data as FeaturedRow[]) ?? []));
+  }, []);
+
   return (
     <section className="py-24 px-5">
       <div className="max-w-7xl mx-auto">
         <SectionLabel kicker="Handpicked Exclusives" title={<>Featured <em className="gold-text not-italic">Handpicked Properties</em></>} />
         <p className="text-white/80 max-w-2xl mt-6 text-lg">Browse our exclusive listings with comprehensive photos, location transparency, and detailed parameters.</p>
-        <div className="mt-14 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {listings.map((l) => (
-            <article key={l.title} className="rounded-2xl overflow-hidden bg-surface border border-[rgba(212,175,55,0.25)] group hover:gold-glow transition-all">
-              <div className="aspect-[4/3] bg-gradient-to-br from-navy to-navy-deep grid place-items-center relative">
-                <span className="font-display text-7xl text-white/10">9</span>
-                <span className="absolute top-4 left-4 bg-gold text-navy-deep text-[10px] font-mono font-semibold px-3 py-1.5 rounded-full tracking-wider">{l.tag.toUpperCase()}</span>
-                <span className="absolute top-4 right-4 bg-navy-deep/80 text-white text-[10px] font-mono px-3 py-1.5 rounded-full">📷 6 Photos</span>
-              </div>
-              <div className="p-6">
-                <div className="font-display text-2xl gold-text mb-1">{l.price}</div>
-                <h3 className="font-display text-xl mb-1">{l.title}</h3>
-                <p className="text-white/70 text-sm mb-4">📍 {l.loc}</p>
-                <div className="flex items-center gap-2 text-gold text-[11px] font-mono tracking-wider mb-4">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                  VERIFIED LISTING
+        {listings.length === 0 ? (
+          <p className="mt-14 text-white/60 font-mono text-sm">New featured properties coming soon. Meanwhile, share your requirement on Explore.</p>
+        ) : (
+          <div className="mt-14 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {listings.map((l) => (
+              <article key={l.id} className="rounded-2xl overflow-hidden bg-surface border border-[rgba(212,175,55,0.25)] group hover:gold-glow transition-all">
+                <div className="aspect-[4/3] bg-gradient-to-br from-navy to-navy-deep relative overflow-hidden">
+                  {l.image_urls[0] ? (
+                    <img src={l.image_urls[0]} alt={l.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="absolute inset-0 grid place-items-center font-display text-7xl text-white/10">9</span>
+                  )}
+                  <span className="absolute top-4 left-4 bg-gold text-navy-deep text-[10px] font-mono font-semibold px-3 py-1.5 rounded-full tracking-wider">{l.tag.toUpperCase()}</span>
+                  {l.image_urls.length > 1 && (
+                    <span className="absolute top-4 right-4 bg-navy-deep/80 text-white text-[10px] font-mono px-3 py-1.5 rounded-full">📷 {l.image_urls.length} Photos</span>
+                  )}
                 </div>
-                <div className="flex gap-4 text-sm text-white/85 pb-4 border-b border-[rgba(212,175,55,0.15)]">
-                  <span>🛏️ {l.bhk}</span><span>📐 {l.size}</span>
-                </div>
-                <div className="flex items-center justify-between mt-4">
-                  <div className="flex items-center gap-2">
-                    <span className="w-8 h-8 rounded-full bg-gold text-navy-deep grid place-items-center font-mono text-xs font-bold">SP</span>
-                    <span className="text-sm">Satish Pal</span>
+                <div className="p-6">
+                  <div className="font-display text-2xl gold-text mb-1">{l.price}</div>
+                  <h3 className="font-display text-xl mb-1">{l.title}</h3>
+                  <p className="text-white/70 text-sm mb-4">📍 {l.location}</p>
+                  <div className="flex items-center gap-2 text-gold text-[11px] font-mono tracking-wider mb-4">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    VERIFIED LISTING
                   </div>
-                  <a href={`${WHATSAPP_URL}?text=${encodeURIComponent(`Hi, I'd like details on ${l.title}`)}`} target="_blank" rel="noreferrer" className="text-[#25D366] text-sm font-mono tracking-wider hover:text-gold">WhatsApp →</a>
+                  <div className="flex gap-4 text-sm text-white/85 pb-4 border-b border-[rgba(212,175,55,0.15)]">
+                    {l.bhk && <span>🛏️ {l.bhk}</span>}{l.size && <span>📐 {l.size}</span>}
+                  </div>
+                  <div className="flex items-center justify-between mt-4">
+                    <div className="flex items-center gap-2">
+                      <span className="w-8 h-8 rounded-full bg-gold text-navy-deep grid place-items-center font-mono text-xs font-bold">SP</span>
+                      <span className="text-sm">Satish Pal</span>
+                    </div>
+                    <a href={`${WHATSAPP_URL}?text=${encodeURIComponent(`Hi, I'd like details on ${l.title}`)}`} target="_blank" rel="noreferrer" className="text-[#25D366] text-sm font-mono tracking-wider hover:text-gold">WhatsApp →</a>
+                  </div>
                 </div>
-              </div>
-            </article>
-          ))}
-        </div>
+              </article>
+            ))}
+          </div>
+        )}
         <div className="text-center mt-12">
           <Link to="/explore" className="btn-gold">Explore All properties →</Link>
         </div>
