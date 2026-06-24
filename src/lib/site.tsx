@@ -1,5 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
+import logoAsset from "@/assets/logo.jpg.asset.json";
+
+export const LOGO_URL = logoAsset.url;
 
 export const EMAILJS_PUBLIC_KEY = "4QayvNxjOzOJJMGGJ";
 export const EMAILJS_SERVICE_ID = "service_k6i5o1c";
@@ -26,7 +29,7 @@ export function Header() {
     <header className="fixed top-0 left-0 right-0 z-40 backdrop-blur-md bg-[rgba(10,25,49,0.85)] border-b border-[rgba(212,175,55,0.2)]">
       <div className="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between gap-4">
         <Link to="/" className="flex items-center gap-3 shrink-0" onClick={() => setOpen(false)}>
-          <span className="grid place-items-center w-11 h-11 rounded-full bg-gold text-navy-deep font-display font-bold text-2xl shrink-0">9</span>
+          <img src={LOGO_URL} alt="Zero9Home" className="w-11 h-11 rounded-lg object-cover bg-black" />
           <span className="font-display text-xl tracking-wide">Zero9Home<span className="gold-text">.com</span></span>
         </Link>
         <nav className="hidden lg:flex items-center gap-7 text-[11px] font-mono tracking-[0.15em]">
@@ -63,7 +66,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-10">
         <div className="lg:col-span-5">
           <div className="flex items-center gap-3 mb-6">
-            <span className="grid place-items-center w-12 h-12 rounded-full bg-gold text-navy-deep font-display font-bold text-2xl">9</span>
+            <img src={LOGO_URL} alt="Zero9Home" className="w-12 h-12 rounded-lg object-cover bg-black" />
             <span className="font-display text-2xl">Zero9Home<span className="gold-text">.com</span></span>
           </div>
           <p className="text-white/85 leading-relaxed max-w-md mb-8">

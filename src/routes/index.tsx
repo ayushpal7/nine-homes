@@ -1,7 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import heroImg from "@/assets/hero.jpg";
-import satishImg from "@/assets/satish.jpg";
+import satishAsset from "@/assets/satish-real.jpg.asset.json";
 import { PageShell, SectionLabel, WHATSAPP_URL } from "@/lib/site";
+import { supabase } from "@/integrations/supabase/client";
+
+const satishImg = satishAsset.url;
 
 export const Route = createFileRoute("/")({
   head: () => ({
