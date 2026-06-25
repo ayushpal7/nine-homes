@@ -30,8 +30,9 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
   // Fall back to process.env for SSR (server-side rendering)
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-  const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+  const processEnv = typeof process !== 'undefined' ? process.env : undefined;
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || processEnv?.SUPABASE_URL;
+  const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || processEnv?.SUPABASE_PUBLISHABLE_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
@@ -40,7 +41,7 @@ function createSupabaseClient() {
     ];
     const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Connect Supabase in Lovable Cloud.`;
     console.error(`[Supabase] ${message}`);
-    throw new Error(message);
+    return createDisabledSupabaseClient(message);
   }
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
@@ -53,6 +54,26 @@ function createSupabaseClient() {
       autoRefreshToken: true,
     }
   });
+}
+
+function createDisabledSupabaseClient(message: string) {
+  const result = { data: null, error: new Error(message) };
+  const builder = {
+    select() { return this; },
+    insert() { return this; },
+    update() { return this; },
+    delete() { return this; },
+    eq() { return this; },
+    order() { return this; },
+    single() { return this; },
+    then: Promise.resolve(result).then.bind(Promise.resolve(result)),
+    catch: Promise.resolve(result).catch.bind(Promise.resolve(result)),
+    finally: Promise.resolve(result).finally.bind(Promise.resolve(result)),
+  };
+
+  return {
+    from: () => builder,
+  } as unknown as ReturnType<typeof createClient<Database>>;
 }
 
 let _supabase: ReturnType<typeof createSupabaseClient> | undefined;
