@@ -1,0 +1,6 @@
+{
+  "name": "Zero9Home",
+  "description": "Curating Delhi NCR's Finest Homes. 24+ years of trusted real estate expertise across Delhi, Gurgaon, Noida, Greater Noida, Faridabad, and Ghaziabad.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
