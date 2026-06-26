@@ -10,17 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ListRouteImport } from './routes/list'
-import { Route as IndexRouteImport } from './routes/index_'
+import { Route as IndexAliasRouteImport } from './routes/index_'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as AdminRouteImport } from './routes/admin'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as HomeRouteImport } from './routes/index'
 
 const ListRoute = ListRouteImport.update({
   id: '/list',
   path: '/list',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const IndexAliasRoute = IndexAliasRouteImport.update({
   id: '/index_',
   path: '/index',
   getParentRoute: () => rootRouteImport,
@@ -35,32 +35,32 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const HomeRoute = HomeRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof HomeRoute
   '/admin': typeof AdminRoute
   '/explore': typeof ExploreRoute
-  '/index': typeof IndexRoute
+  '/index': typeof IndexAliasRoute
   '/list': typeof ListRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/': typeof HomeRoute
   '/admin': typeof AdminRoute
   '/explore': typeof ExploreRoute
-  '/index': typeof IndexRoute
+  '/index': typeof IndexAliasRoute
   '/list': typeof ListRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/': typeof HomeRoute
   '/admin': typeof AdminRoute
   '/explore': typeof ExploreRoute
-  '/index_': typeof IndexRoute
+  '/index_': typeof IndexAliasRoute
   '/list': typeof ListRoute
 }
 export interface FileRouteTypes {
@@ -72,10 +72,10 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  HomeRoute: typeof HomeRoute
   AdminRoute: typeof AdminRoute
   ExploreRoute: typeof ExploreRoute
-  IndexRoute: typeof IndexRoute
+  IndexAliasRoute: typeof IndexAliasRoute
   ListRoute: typeof ListRoute
 }
 
@@ -92,7 +92,7 @@ declare module '@tanstack/react-router' {
       id: '/index_'
       path: '/index'
       fullPath: '/index'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof IndexAliasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/explore': {
@@ -113,17 +113,17 @@ declare module '@tanstack/react-router' {
       id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  HomeRoute: HomeRoute,
   AdminRoute: AdminRoute,
   ExploreRoute: ExploreRoute,
-  IndexRoute: IndexRoute,
+  IndexAliasRoute: IndexAliasRoute,
   ListRoute: ListRoute,
 }
 export const routeTree = rootRouteImport
