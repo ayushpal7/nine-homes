@@ -75,14 +75,16 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   beforeLoad: ({ location }) => {
-    if (location.pathname.endsWith("/index.html")) {
-      const cleanPath = location.pathname.slice(0, -11) || "/";
-      throw redirect({ to: cleanPath });
-    } else if (
-      location.pathname === "/index" ||
-      location.pathname === "/index.html"
-    ) {
-      throw redirect({ to: "/" });
+    if (typeof window !== "undefined") {
+      if (location.pathname.endsWith("/index.html")) {
+        const cleanPath = location.pathname.slice(0, -11) || "/";
+        throw redirect({ to: cleanPath });
+      } else if (
+        location.pathname === "/index" ||
+        location.pathname === "/index.html"
+      ) {
+        throw redirect({ to: "/" });
+      }
     }
   },
   head: () => ({
