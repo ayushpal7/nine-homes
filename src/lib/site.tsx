@@ -1,4 +1,3 @@
-import { Link, useRouterState } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import logoAsset from "@/assets/logo.jpg.asset.json";
 
@@ -17,30 +16,30 @@ export const OFFICE_ADDRESS = "25/276 Trilok Puri, Delhi - 110091";
 export const MAP_QUERY = "25/276+Trilok+Puri+Delhi+110091";
 
 const NAV = [
-  { label: "HOME", to: "/" as const },
-  { label: "EXPLORE", to: "/explore" as const },
-  { label: "LIST PROPERTY", to: "/list" as const },
+  { label: "HOME", to: "/" },
+  { label: "EXPLORE", to: "/explore" },
+  { label: "LIST PROPERTY", to: "/list" },
 ];
 
 export function Header() {
   const [open, setOpen] = useState(false);
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const pathname = typeof window === "undefined" ? "/" : window.location.pathname;
   return (
     <header className="fixed top-0 left-0 right-0 z-40 backdrop-blur-md bg-[rgba(10,25,49,0.85)] border-b border-[rgba(212,175,55,0.2)]">
       <div className="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between gap-4">
-        <Link to="/" className="flex items-center gap-3 shrink-0" onClick={() => setOpen(false)}>
+        <a href="/" className="flex items-center gap-3 shrink-0" onClick={() => setOpen(false)}>
           <img src={LOGO_URL} alt="Zero9Home" className="w-11 h-11 rounded-lg object-cover bg-black" />
           <span className="font-display text-xl tracking-wide">Zero9Home<span className="gold-text">.com</span></span>
-        </Link>
+        </a>
         <nav className="hidden lg:flex items-center gap-7 text-[11px] font-mono tracking-[0.15em]">
           {NAV.map((item) => (
-            <Link
+            <a
               key={item.label}
-              to={item.to}
+              href={item.to}
               className={`transition-colors hover:text-gold ${pathname === item.to ? "text-gold" : ""}`}
             >
               {item.label}
-            </Link>
+            </a>
           ))}
           <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className="text-gold hover:text-gold-soft">WHATSAPP</a>
         </nav>
@@ -51,7 +50,7 @@ export function Header() {
       {open && (
         <div className="lg:hidden bg-navy border-t border-[rgba(212,175,55,0.2)] px-5 py-4 flex flex-col gap-4 text-sm font-mono">
           {NAV.map((item) => (
-            <Link key={item.label} to={item.to} onClick={() => setOpen(false)} className="hover:text-gold">{item.label}</Link>
+            <a key={item.label} href={item.to} onClick={() => setOpen(false)} className="hover:text-gold">{item.label}</a>
           ))}
           <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className="text-gold">WHATSAPP</a>
         </div>
@@ -79,8 +78,8 @@ export function Footer() {
             <div className="flex gap-3 items-start"><span className="gold-text shrink-0 w-24">OFFICE</span> {OFFICE_ADDRESS}</div>
           </div>
           <div className="mt-8 grid grid-cols-2 gap-3 max-w-sm">
-            <Link to="/explore" className="btn-gold text-sm py-3">Explore Properties</Link>
-            <Link to="/list" className="btn-gold-outline text-sm py-3">List Property</Link>
+            <a href="/explore" className="btn-gold text-sm py-3">Explore Properties</a>
+            <a href="/list" className="btn-gold-outline text-sm py-3">List Property</a>
           </div>
         </div>
         <div className="lg:col-span-7 rounded-2xl overflow-hidden gold-border min-h-[360px]">

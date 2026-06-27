@@ -1,4 +1,3 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import emailjs from "@emailjs/browser";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,23 +11,8 @@ import {
   WHATSAPP_URL,
 } from "@/lib/site";
 
-export const Route = createFileRoute("/explore")({
-  head: () => ({
-    meta: [
-      { title: "Looking for a Property — Zero9Home Delhi NCR" },
-      { name: "description", content: "Share your buying or rental requirement. Satish Pal personally curates verified Delhi NCR properties within 24 hours." },
-      { property: "og:title", content: "Looking for a Property — Zero9Home" },
-      { property: "og:description", content: "Tell us what you're looking for across Delhi, Gurgaon, Noida, Faridabad and Ghaziabad." },
-    ],
-  }),
-  component: ExplorePage,
-  validateSearch: (s: Record<string, unknown>) => ({
-    type: s.type === "rent" ? "rent" : "buy",
-  }),
-});
-
-function ExplorePage() {
-  const { type: initialType } = Route.useSearch();
+export default function ExplorePage() {
+  const initialType = new URLSearchParams(typeof window === "undefined" ? "" : window.location.search).get("type") === "rent" ? "rent" : "buy";
   const formRef = useRef<HTMLFormElement>(null);
   const [type, setType] = useState<"buy" | "rent">(initialType);
   const [status, setStatus] = useState<"idle" | "sending" | "ok" | "err">("idle");
