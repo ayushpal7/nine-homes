@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
@@ -35,6 +35,11 @@ function appwriteStaticFallbackPlugin(): Plugin {
       // copy also protects hosts that automatically fallback to /404.html.
       if (existsSync(indexHtml)) {
         copyFileSync(indexHtml, notFoundHtml);
+        for (const route of ["explore", "list", "admin", "index"]) {
+          const routeDir = join(process.cwd(), "dist", route);
+          mkdirSync(routeDir, { recursive: true });
+          copyFileSync(indexHtml, join(routeDir, "index.html"));
+        }
       }
     },
   };
