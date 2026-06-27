@@ -1,4 +1,3 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import emailjs from "@emailjs/browser";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,19 +11,7 @@ import {
   WHATSAPP_URL,
 } from "@/lib/site";
 
-export const Route = createFileRoute("/list")({
-  head: () => ({
-    meta: [
-      { title: "List Your Property — Zero9Home Delhi NCR" },
-      { name: "description", content: "Register as a landlord or owner. Satish Pal personally verifies your submission for sale or rental across Delhi NCR." },
-      { property: "og:title", content: "List Your Property — Zero9Home" },
-      { property: "og:description", content: "Upload photos and details — your property is reviewed personally by founder Satish Pal." },
-    ],
-  }),
-  component: ListPage,
-});
-
-function ListPage() {
+export default function ListPage() {
   const formRef = useRef<HTMLFormElement>(null);
   const [images, setImages] = useState<{ name: string; data: string }[]>([]);
   const [status, setStatus] = useState<"idle" | "sending" | "ok" | "err">("idle");

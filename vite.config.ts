@@ -1,13 +1,9 @@
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - tanstackStart, viteReact, tailwindcss, tsConfigPaths, nitro (build-only using cloudflare as a default target),
-//     componentTagger (dev-only), VITE_* env injection, @ path alias, React/TanStack dedupe,
-//     error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
-import { copyFileSync, existsSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { defineConfig } from "@lovable.dev/vite-tanstack-config";
-import { loadEnv, type Plugin } from "vite";
+import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import { defineConfig, loadEnv, type Plugin } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 function exposeSupabaseEnvForStaticClient(): Plugin {
   return {
@@ -39,38 +35,33 @@ function appwriteStaticFallbackPlugin(): Plugin {
       // copy also protects hosts that automatically fallback to /404.html.
       if (existsSync(indexHtml)) {
         copyFileSync(indexHtml, notFoundHtml);
+        for (const route of ["explore", "list", "admin", "index"]) {
+          const routeDir = join(process.cwd(), "dist", route);
+          mkdirSync(routeDir, { recursive: true });
+          copyFileSync(indexHtml, join(routeDir, "index.html"));
+        }
       }
     },
   };
 }
 
 export default defineConfig({
-  // Appwrite was serving the project as a static site, while the previous config
-  // emitted a Nitro SSR bundle. Build a real static SPA instead: dist/index.html
-  // + dist/404.html + prerendered route folders.
-  nitro: false,
-  tanstackStart: {
-    spa: {
-      enabled: true,
-      maskPath: "/",
-      prerender: { outputPath: "/index" },
-    },
-    prerender: {
-      enabled: true,
-      crawlLinks: false,
-      failOnError: false,
-    },
-    pages: [
-      { path: "/explore" },
-      { path: "/list" },
-      { path: "/admin" },
-    ],
+  plugins: [
+    react(),
+    tsconfigPaths(),
+    tailwindcss(),
+    exposeSupabaseEnvForStaticClient(),
+    appwriteStaticFallbackPlugin(),
+  ],
+  server: {
+    host: "0.0.0.0",
+    port: 8080,
   },
-  vite: {
-    environments: {
-      client: { build: { outDir: "dist" } },
-      ssr: { build: { outDir: ".tanstack/server" } },
-    },
-    plugins: [exposeSupabaseEnvForStaticClient(), appwriteStaticFallbackPlugin()],
+  preview: {
+    host: "0.0.0.0",
+  },
+  build: {
+    outDir: "dist",
+    emptyOutDir: true,
   },
 });

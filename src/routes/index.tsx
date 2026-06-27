@@ -1,4 +1,3 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import heroImg from "@/assets/hero.jpg";
 import satishAsset from "@/assets/satish-real.jpg.asset.json";
@@ -7,19 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const satishImg = satishAsset.url;
 
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Zero9Home.com — Curating Delhi NCR's Finest Homes" },
-      { name: "description", content: "24+ years curating verified residential, commercial & rental properties across Delhi, Gurgaon, Noida, Greater Noida, Faridabad & Ghaziabad." },
-      { property: "og:title", content: "Zero9Home.com — Curating Delhi NCR's Finest Homes" },
-      { property: "og:description", content: "Verified luxury homes across Delhi NCR. Personally curated by Satish Pal." },
-    ],
-  }),
-  component: Index,
-});
-
-function Index() {
+export default function Index() {
   return (
     <PageShell>
       <Hero />
@@ -52,8 +39,8 @@ function Hero() {
           Serving Delhi NCR with <span className="gold-text font-medium">24+ years</span> of experience in residential, commercial, and rental properties across Delhi, Gurgaon, Noida, Greater Noida, Faridabad, and Ghaziabad.
         </p>
         <div className="flex flex-wrap gap-4">
-          <Link to="/explore" className="btn-gold">Explore properties →</Link>
-          <Link to="/list" className="btn-gold-outline">List your property</Link>
+          <a href="/explore" className="btn-gold">Explore properties →</a>
+          <a href="/list" className="btn-gold-outline">List your property</a>
         </div>
         <div className="mt-14 flex flex-wrap gap-2">
           {cities.map((c) => (
@@ -158,7 +145,7 @@ function Featured() {
           </div>
         )}
         <div className="text-center mt-12">
-          <Link to="/explore" className="btn-gold">Explore All properties →</Link>
+          <a href="/explore" className="btn-gold">Explore All properties →</a>
         </div>
       </div>
     </section>

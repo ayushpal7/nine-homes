@@ -1,52 +1,44 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import {
-  verifyAdmin,
-  adminListInquiries,
-  adminListListings,
-  adminListFeatured,
-  adminUpsertFeatured,
-  adminDeleteFeatured,
-  type FeaturedInput,
-} from "@/lib/admin.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { PageShell, SectionLabel, Field } from "@/lib/site";
 
-export const Route = createFileRoute("/admin")({
-  head: () => ({
-    meta: [
-      { title: "Admin · Zero9Home" },
-      { name: "robots", content: "noindex,nofollow" },
-    ],
-  }),
-  component: AdminPage,
-});
-
 const PW_KEY = "zero9_admin_pw";
+const ADMIN_PASSWORD = "zero9home";
 
-function AdminPage() {
+type FeaturedInput = {
+  id?: string;
+  title: string;
+  location: string;
+  price: string;
+  tag: string;
+  bhk?: string;
+  size?: string;
+  description?: string;
+  image_urls: string[];
+  is_active: boolean;
+  sort_order: number;
+};
+
+export default function AdminPage() {
   const [pw, setPw] = useState<string>("");
   const [authed, setAuthed] = useState(false);
   const [tab, setTab] = useState<"inquiries" | "listings" | "featured">("inquiries");
-  const verify = useServerFn(verifyAdmin);
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? sessionStorage.getItem(PW_KEY) : null;
-    if (saved) {
-      verify({ data: { password: saved } })
-        .then(() => { setPw(saved); setAuthed(true); })
-        .catch(() => sessionStorage.removeItem(PW_KEY));
+    if (saved === ADMIN_PASSWORD) {
+      setPw(saved);
+      setAuthed(true);
     }
-  }, [verify]);
+  }, []);
 
   const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const password = (new FormData(e.currentTarget).get("password") as string) || "";
-    try {
-      await verify({ data: { password } });
+    if (password === ADMIN_PASSWORD) {
       sessionStorage.setItem(PW_KEY, password);
       setPw(password); setAuthed(true);
-    } catch {
+    } else {
       alert("Wrong password");
     }
   };
@@ -93,12 +85,20 @@ function AdminPage() {
 }
 
 function InquiriesTab({ pw }: { pw: string }) {
-  const fn = useServerFn(adminListInquiries);
   const [rows, setRows] = useState<any[]>([]);
-  useEffect(() => { fn({ data: { password: pw } }).then(setRows).catch(console.error); }, [fn, pw]);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    if (!pw) return;
+    supabase.from("inquiries").select("*").order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (error) setError("Private submissions are protected in static hosting. Check submitted emails at zero9home@gmail.com.");
+        setRows(data ?? []);
+      });
+  }, [pw]);
   return (
     <div className="space-y-3">
       <p className="font-mono text-xs text-white/60">{rows.length} inquiry submissions</p>
+      {error && <p className="rounded-xl gold-border bg-navy-deep p-5 text-sm text-white/80">{error}</p>}
       {rows.map((r) => (
         <div key={r.id} className="rounded-xl gold-border bg-navy-deep p-5 grid sm:grid-cols-4 gap-3 text-sm">
           <div><div className="text-[10px] gold-text font-mono uppercase">When</div>{new Date(r.created_at).toLocaleString()}</div>
@@ -112,12 +112,20 @@ function InquiriesTab({ pw }: { pw: string }) {
 }
 
 function ListingsTab({ pw }: { pw: string }) {
-  const fn = useServerFn(adminListListings);
   const [rows, setRows] = useState<any[]>([]);
-  useEffect(() => { fn({ data: { password: pw } }).then(setRows).catch(console.error); }, [fn, pw]);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    if (!pw) return;
+    supabase.from("listing_submissions").select("*").order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (error) setError("Private listing submissions are protected in static hosting. Check submitted emails at zero9home@gmail.com.");
+        setRows(data ?? []);
+      });
+  }, [pw]);
   return (
     <div className="space-y-3">
       <p className="font-mono text-xs text-white/60">{rows.length} owner submissions</p>
+      {error && <p className="rounded-xl gold-border bg-navy-deep p-5 text-sm text-white/80">{error}</p>}
       {rows.map((r) => (
         <div key={r.id} className="rounded-xl gold-border bg-navy-deep p-5 grid sm:grid-cols-4 gap-3 text-sm">
           <div><div className="text-[10px] gold-text font-mono uppercase">When</div>{new Date(r.created_at).toLocaleString()}</div>
@@ -137,14 +145,19 @@ const blankFeatured: FeaturedInput = {
 };
 
 function FeaturedTab({ pw }: { pw: string }) {
-  const listFn = useServerFn(adminListFeatured);
-  const upsertFn = useServerFn(adminUpsertFeatured);
-  const deleteFn = useServerFn(adminDeleteFeatured);
   const [rows, setRows] = useState<any[]>([]);
   const [editing, setEditing] = useState<FeaturedInput | null>(null);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
-  const reload = () => listFn({ data: { password: pw } }).then(setRows).catch(console.error);
+  const reload = () => {
+    if (!pw) return Promise.resolve();
+    return supabase.from("featured_properties").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (error) setError(error.message);
+        setRows(data ?? []);
+      });
+  };
   useEffect(() => { reload(); /* eslint-disable-next-line */ }, [pw]);
 
   const onFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -160,14 +173,28 @@ function FeaturedTab({ pw }: { pw: string }) {
   const save = async () => {
     if (!editing) return;
     setBusy(true);
-    try { await upsertFn({ data: { password: pw, property: editing } }); setEditing(null); await reload(); }
-    catch (e) { console.error(e); alert("Save failed"); }
+    try {
+      const payload = {
+        title: editing.title, location: editing.location, price: editing.price, tag: editing.tag,
+        bhk: editing.bhk || null, size: editing.size || null, description: editing.description || null,
+        image_urls: editing.image_urls, is_active: editing.is_active, sort_order: editing.sort_order,
+      };
+      const result = editing.id
+        ? await supabase.from("featured_properties").update(payload).eq("id", editing.id)
+        : await supabase.from("featured_properties").insert(payload);
+      if (result.error) throw result.error;
+      setEditing(null);
+      await reload();
+    }
+    catch (e) { console.error(e); alert("Save failed because static hosting cannot securely write admin data without backend permissions."); }
     finally { setBusy(false); }
   };
 
   const remove = async (id: string) => {
     if (!confirm("Delete this featured property?")) return;
-    await deleteFn({ data: { password: pw, id } }); reload();
+    const { error } = await supabase.from("featured_properties").delete().eq("id", id);
+    if (error) alert("Delete failed because static hosting cannot securely write admin data without backend permissions.");
+    reload();
   };
 
   return (
@@ -176,6 +203,7 @@ function FeaturedTab({ pw }: { pw: string }) {
         <p className="font-mono text-xs text-white/60">{rows.length} featured properties</p>
         <button onClick={() => setEditing({ ...blankFeatured })} className="btn-gold text-sm">+ New property</button>
       </div>
+      {error && <p className="rounded-xl gold-border bg-navy-deep p-5 text-sm text-white/80">{error}</p>}
 
       {editing && (
         <div className="rounded-xl gold-border bg-navy-deep p-6 space-y-4">
