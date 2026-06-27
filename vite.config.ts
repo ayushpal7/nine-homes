@@ -40,7 +40,7 @@ function appwriteStaticFallbackPlugin(): Plugin {
   };
 }
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   plugins: [
     react(),
     tsconfigPaths(),
@@ -48,9 +48,6 @@ export default defineConfig(({ mode }) => ({
     exposeSupabaseEnvForStaticClient(),
     appwriteStaticFallbackPlugin(),
   ],
-  define: {
-    "process.env.NODE_ENV": JSON.stringify(mode === "production" ? "production" : "development"),
-  },
   server: {
     host: "0.0.0.0",
     port: 8080,
@@ -62,4 +59,4 @@ export default defineConfig(({ mode }) => ({
     outDir: "dist",
     emptyOutDir: true,
   },
-}));
+});
