@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageShell, SectionLabel, Field } from "@/lib/site";
 
 const PW_KEY = "zero9_admin_pw";
-const ADMIN_PASSWORD = "Zero9Home@2026!";
+const ADMIN_PASSWORD = "respectayush";
 
 type FeaturedInput = {
   id?: string;
