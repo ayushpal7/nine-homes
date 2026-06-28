@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import heroImg from "@/assets/hero.jpg";
-import satishAsset from "@/assets/satish-real.jpg.asset.json";
+import satishImg from "@/assets/satish-real.jpg";
 import { PageShell, SectionLabel, WHATSAPP_URL } from "@/lib/site";
 import { supabase } from "@/integrations/supabase/client";
-
-const satishImg = satishAsset.url;
 
 export default function Index() {
   return (
@@ -39,8 +37,8 @@ function Hero() {
           Serving Delhi NCR with <span className="gold-text font-medium">24+ years</span> of experience in residential, commercial, and rental properties across Delhi, Gurgaon, Noida, Greater Noida, Faridabad, and Ghaziabad.
         </p>
         <div className="flex flex-wrap gap-4">
-          <a href="/explore" className="btn-gold">Explore properties →</a>
-          <a href="/list" className="btn-gold-outline">List your property</a>
+          <a href="/explore" className="btn-gold">Buy/Rent →</a>
+          <a href="/list" className="btn-gold-outline">Sell/Rent Out</a>
         </div>
         <div className="mt-14 flex flex-wrap gap-2">
           {cities.map((c) => (
@@ -105,7 +103,7 @@ function Featured() {
         <SectionLabel kicker="Handpicked Exclusives" title={<>Featured <em className="gold-text not-italic">Handpicked Properties</em></>} />
         <p className="text-white/80 max-w-2xl mt-6 text-lg">Browse our exclusive listings with comprehensive photos, location transparency, and detailed parameters.</p>
         {listings.length === 0 ? (
-          <p className="mt-14 text-white/60 font-mono text-sm">New featured properties coming soon. Meanwhile, share your requirement on Explore.</p>
+          <p className="mt-14 text-white/60 font-mono text-sm">New featured properties coming soon. Meanwhile, share your requirement on Buy/Rent.</p>
         ) : (
           <div className="mt-14 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {listings.map((l) => (
@@ -145,7 +143,7 @@ function Featured() {
           </div>
         )}
         <div className="text-center mt-12">
-          <a href="/explore" className="btn-gold">Explore All properties →</a>
+          <a href="/explore" className="btn-gold">Buy/Rent →</a>
         </div>
       </div>
     </section>

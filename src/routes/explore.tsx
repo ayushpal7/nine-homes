@@ -8,6 +8,7 @@ import {
   Field,
   PageShell,
   SectionLabel,
+  SubmitSuccessDialog,
   WHATSAPP_URL,
 } from "@/lib/site";
 
@@ -106,6 +107,11 @@ export default function ExplorePage() {
           </form>
         </div>
       </section>
+      <SubmitSuccessDialog
+        open={status === "ok"}
+        title="Inquiry Submitted Successfully"
+        description="Thank you! Satish Pal will personally curate verified matches and get back to you within 24 hours."
+      />
     </PageShell>
   );
 }

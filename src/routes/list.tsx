@@ -8,6 +8,7 @@ import {
   Field,
   PageShell,
   SectionLabel,
+  SubmitSuccessDialog,
   WHATSAPP_URL,
 } from "@/lib/site";
 
@@ -143,6 +144,11 @@ export default function ListPage() {
           </form>
         </div>
       </section>
+      <SubmitSuccessDialog
+        open={status === "ok"}
+        title="Property Listed Successfully"
+        description="Thank you! Owner Satish Pal will personally verify your submission and get in touch with you soon."
+      />
     </PageShell>
   );
 }

@@ -1,7 +1,16 @@
 import { useState, type ReactNode } from "react";
-import logoAsset from "@/assets/logo.jpg.asset.json";
+import logoImg from "@/assets/logo.jpg";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
-export const LOGO_URL = logoAsset.url;
+export const LOGO_URL = logoImg;
 
 export const EMAILJS_PUBLIC_KEY = "4QayvNxjOzOJJMGGJ";
 export const EMAILJS_SERVICE_ID = "service_k6i5o1c";
@@ -17,8 +26,8 @@ export const MAP_QUERY = "25/276+Trilok+Puri+Delhi+110091";
 
 const NAV = [
   { label: "HOME", to: "/" },
-  { label: "EXPLORE", to: "/explore" },
-  { label: "LIST PROPERTY", to: "/list" },
+  { label: "BUY/RENT", to: "/explore" },
+  { label: "SELL/RENT OUT", to: "/list" },
 ];
 
 export function Header() {
@@ -78,8 +87,8 @@ export function Footer() {
             <div className="flex gap-3 items-start"><span className="gold-text shrink-0 w-24">OFFICE</span> {OFFICE_ADDRESS}</div>
           </div>
           <div className="mt-8 grid grid-cols-2 gap-3 max-w-sm">
-            <a href="/explore" className="btn-gold text-sm py-3">Explore Properties</a>
-            <a href="/list" className="btn-gold-outline text-sm py-3">List Property</a>
+            <a href="/explore" className="btn-gold text-sm py-3">Buy/Rent</a>
+            <a href="/list" className="btn-gold-outline text-sm py-3">Sell/Rent Out</a>
           </div>
         </div>
         <div className="lg:col-span-7 rounded-2xl overflow-hidden gold-border min-h-[360px]">
@@ -138,5 +147,31 @@ export function PageShell({ children }: { children: ReactNode }) {
       <Footer />
       <FloatingActions />
     </div>
+  );
+}
+
+export function SubmitSuccessDialog({
+  open,
+  title = "Submitted Successfully",
+  description = "Thank you! We've received your details and will get back to you soon.",
+}: {
+  open: boolean;
+  title?: string;
+  description?: string;
+}) {
+  return (
+    <AlertDialog open={open}>
+      <AlertDialogContent className="bg-navy-deep gold-border text-foreground">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="font-display text-2xl gold-text">{title}</AlertDialogTitle>
+          <AlertDialogDescription className="text-white/80">{description}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogAction onClick={() => { window.location.href = "/"; }} className="btn-gold">
+            OK
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
