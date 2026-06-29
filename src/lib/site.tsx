@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import logoImg from "@/assets/logo.jpg";
+import logoImg from "@/assets/logo.png";
 import {
   AlertDialog,
   AlertDialogContent,
