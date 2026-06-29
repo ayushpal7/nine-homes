@@ -36,9 +36,8 @@ export function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-40 backdrop-blur-md bg-[rgba(10,25,49,0.85)] border-b border-[rgba(212,175,55,0.2)]">
       <div className="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between gap-4">
-        <a href="/" className="flex items-center gap-3 shrink-0" onClick={() => setOpen(false)}>
-          <img src={LOGO_URL} alt="Zero9Home" className="w-11 h-11 rounded-lg object-cover bg-black" />
-          <span className="font-display text-xl tracking-wide">Zero9Home<span className="gold-text">.com</span></span>
+        <a href="/" className="flex items-center shrink-0" onClick={() => setOpen(false)}>
+          <img src={LOGO_URL} alt="Zero9Home" className="h-10 sm:h-12 w-auto object-contain" />
         </a>
         <nav className="hidden lg:flex items-center gap-7 text-[11px] font-mono tracking-[0.15em]">
           {NAV.map((item) => (
@@ -73,19 +72,12 @@ export function Footer() {
     <footer id="contact" className="pt-20 pb-10 px-5 border-t border-[rgba(212,175,55,0.2)] bg-navy-deep">
       <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-10">
         <div className="lg:col-span-5">
-          <div className="flex items-center gap-3 mb-6">
-            <img src={LOGO_URL} alt="Zero9Home" className="w-12 h-12 rounded-lg object-cover bg-black" />
-            <span className="font-display text-2xl">Zero9Home<span className="gold-text">.com</span></span>
+          <div className="mb-6">
+            <img src={LOGO_URL} alt="Zero9Home" className="h-12 w-auto object-contain" />
           </div>
           <p className="text-white/85 leading-relaxed max-w-md mb-8">
             A premier advisory firm founded on trust, transparent legal structures, and meticulous property checks. Handled directly by Satish Pal.
           </p>
-          <div className="space-y-3 font-mono text-sm">
-            <a href={`tel:${PHONE}`} className="flex gap-3 items-center hover:text-gold"><span className="gold-text w-24">DIRECT LINE</span> {PHONE_DISPLAY}</a>
-            <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className="flex gap-3 items-center hover:text-gold"><span className="gold-text w-24">WHATSAPP</span> {PHONE_DISPLAY}</a>
-            <a href={`mailto:${EMAIL}`} className="flex gap-3 items-center hover:text-gold"><span className="gold-text w-24">EMAIL</span> {EMAIL}</a>
-            <div className="flex gap-3 items-start"><span className="gold-text shrink-0 w-24">OFFICE</span> {OFFICE_ADDRESS}</div>
-          </div>
           <div className="mt-8 grid grid-cols-2 gap-3 max-w-sm">
             <a href="/explore" className="btn-gold text-sm py-3">Buy/Rent</a>
             <a href="/list" className="btn-gold-outline text-sm py-3">Sell/Rent Out</a>

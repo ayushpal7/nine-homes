@@ -26,9 +26,9 @@ function Hero() {
       <img src={heroImg} alt="Delhi NCR luxury skyline" className="absolute inset-0 w-full h-full object-cover opacity-30" width={1920} height={1280} />
       <div className="absolute inset-0 bg-gradient-to-b from-[#0A1931]/70 via-[#0A1931]/85 to-[#0A1931]" />
       <div className="relative max-w-6xl mx-auto w-full">
-        <div className="inline-flex items-center gap-2 text-[11px] font-mono tracking-[0.25em] gold-text border border-[rgba(212,175,55,0.4)] rounded-full px-4 py-2 mb-8">
-          <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-          ZERO9HOME REAL ESTATE
+        <div className="flex flex-wrap gap-4 mb-8">
+          <a href="/explore" className="btn-gold">Buy/Rent →</a>
+          <a href="/list" className="btn-gold-outline">Sell/Rent Out</a>
         </div>
         <h1 className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-[1.05] mb-8 max-w-5xl">
           Curating Delhi NCR's <span className="gold-text italic">Finest Homes</span>
@@ -36,10 +36,6 @@ function Hero() {
         <p className="text-lg md:text-xl max-w-3xl text-white/90 leading-relaxed mb-12 font-light">
           Serving Delhi NCR with <span className="gold-text font-medium">24+ years</span> of experience in residential, commercial, and rental properties across Delhi, Gurgaon, Noida, Greater Noida, Faridabad, and Ghaziabad.
         </p>
-        <div className="flex flex-wrap gap-4">
-          <a href="/explore" className="btn-gold">Buy/Rent →</a>
-          <a href="/list" className="btn-gold-outline">Sell/Rent Out</a>
-        </div>
         <div className="mt-14 flex flex-wrap gap-2">
           {cities.map((c) => (
             <span key={c} className="px-4 py-2 rounded-full border border-[rgba(212,175,55,0.3)] font-mono text-[10px] tracking-[0.2em] text-white/80 hover:border-gold hover:text-gold transition-colors">
@@ -253,10 +249,9 @@ function ContactStrip() {
       <div className="max-w-7xl mx-auto">
         <SectionLabel kicker="Direct Engagement" title={<>Contact <em className="gold-text not-italic">Us</em></>} />
         <p className="text-white/80 max-w-2xl mt-6 text-lg">Connect with Satish Pal instantly for verified residential sales, commercial assets, and premium rentals across Delhi NCR.</p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-12">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-12">
           {[
             { icon: "📞", label: "Direct Line", value: "+91 99115 26004", href: "tel:+919911526004" },
-            { icon: "💬", label: "WhatsApp Channel", value: "+91 99115 26004", href: WHATSAPP_URL },
             { icon: "✉️", label: "Brokerage Mail", value: "zero9home@gmail.com", href: "mailto:zero9home@gmail.com" },
             { icon: "📍", label: "Corporate Office", value: "25/276 Trilok Puri, Delhi - 110091", href: `https://www.google.com/maps?q=25%2F276+Trilok+Puri+Delhi+110091` },
           ].map((c) => (
