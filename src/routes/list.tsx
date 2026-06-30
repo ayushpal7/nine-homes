@@ -109,10 +109,14 @@ export default function ListPage() {
               <input name="address" required className="field" placeholder="Locality, Block, Sector, Apartment Name" />
             </div>
             <Field name="pincode" label="Pincode *" pattern="[0-9]{6}" maxLength={6} placeholder="6-digit pincode" required />
-            <Field name="size" label="Property Size (Gaj / Sq.Ft) *" placeholder="e.g. 150 Gaj or 1500 Sq.Ft" required />
+            <Field name="size" label="Property Size (Gaj / Sq.Ft) *" placeholder="Gaj / Sq.Ft" required />
             <div className="sm:col-span-2">
               <label className="label-gold">Expected Asking Price *</label>
-              <input name="price" required className="field" placeholder="e.g. 1.2 Crore / 45,000 monthly" />
+              <input name="price" required className="field" placeholder="In Rupees" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="label-gold">Final Price *</label>
+              <input name="final_price" required className="field" placeholder="In Rupees" />
             </div>
             <div className="sm:col-span-2">
               <label className="label-gold">Property Uploads *</label>

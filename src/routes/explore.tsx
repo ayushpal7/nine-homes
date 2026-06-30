@@ -87,7 +87,7 @@ export default function ExplorePage() {
             <Field name="name" label="Your Full Name *" placeholder="Enter your full name" required />
             <Field name="mobile" label="10-Digit Mobile Number *" type="tel" pattern="[0-9]{10}" maxLength={10} placeholder="Enter 10-digit mobile number" required />
             <Field name="email" label="Email Address" type="email" placeholder="e.g. contact@domain.com" />
-            <Field name="budget" label="Budget (₹) *" placeholder="e.g. 1.5 Cr / 45,000 pm" required />
+            <Field name="budget" label="Budget (₹) *" placeholder="Buy Price / Monthly Rent" required />
             <Field name="sector" label="Preferred Locality / Sector" placeholder="e.g. Sector 62, Noida" />
             <div className="sm:col-span-2">
               <label className="label-gold">Specific Requirements</label>
