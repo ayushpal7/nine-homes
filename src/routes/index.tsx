@@ -115,8 +115,8 @@ function Featured() {
             {listings.map((l) => (
               <article key={l.id} className="rounded-2xl overflow-hidden bg-surface border border-[rgba(212,175,55,0.25)] group hover:gold-glow transition-all">
                 <div className="aspect-[4/3] bg-gradient-to-br from-navy to-navy-deep relative overflow-hidden">
-                  {l.image_urls[0] ? (
-                    <img src={l.image_urls[0]} alt={l.title} className="w-full h-full object-cover" />
+                  {(previews[l.id]?.[0] ?? l.image_urls[0]) ? (
+                    <img src={previews[l.id]?.[0] ?? l.image_urls[0]} alt={l.title} className="w-full h-full object-cover" />
                   ) : (
                     <span className="absolute inset-0 grid place-items-center font-display text-7xl text-white/10">9</span>
                   )}
