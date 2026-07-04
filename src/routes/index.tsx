@@ -86,11 +86,21 @@ type FeaturedRow = {
 
 function Featured() {
   const [listings, setListings] = useState<FeaturedRow[]>([]);
+  const [previews, setPreviews] = useState<Record<string, string[]>>({});
   useEffect(() => {
-    supabase.from("featured_properties").select("*").eq("is_active", true)
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false })
-      .then(({ data }) => setListings((data as FeaturedRow[]) ?? []));
+    (async () => {
+      const { resolveUrls, FEATURED_BUCKET } = await import("@/lib/storage");
+      const { data } = await supabase.from("featured_properties").select("*").eq("is_active", true)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false });
+      const list = (data as FeaturedRow[]) ?? [];
+      setListings(list);
+      const map: Record<string, string[]> = {};
+      await Promise.all(list.map(async (r) => {
+        if (r.image_urls?.length) map[r.id] = await resolveUrls(FEATURED_BUCKET, r.image_urls);
+      }));
+      setPreviews(map);
+    })();
   }, []);
 
   return (
