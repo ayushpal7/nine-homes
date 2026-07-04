@@ -169,26 +169,44 @@ function FeaturedTab({ pw }: { pw: string }) {
   const [rows, setRows] = useState<any[]>([]);
   const [editing, setEditing] = useState<FeaturedInput | null>(null);
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [previews, setPreviews] = useState<Record<string, string[]>>({});
 
   const reload = () => {
     if (!pw) return Promise.resolve();
     return supabase.from("featured_properties").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (error) setError(error.message);
-        setRows(data ?? []);
+      .then(async ({ data, error }) => {
+        if (error) { setError(error.message); return; }
+        const list = data ?? [];
+        setRows(list);
+        const map: Record<string, string[]> = {};
+        await Promise.all(list.map(async (r: any) => {
+          if (r.image_urls?.length) map[r.id] = await resolveUrls(FEATURED_BUCKET, r.image_urls);
+        }));
+        setPreviews(map);
       });
   };
   useEffect(() => { reload(); /* eslint-disable-next-line */ }, [pw]);
 
+  // Resolve signed URLs for the images currently attached to the editing form
+  const [editingPreviews, setEditingPreviews] = useState<string[]>([]);
+  useEffect(() => {
+    if (!editing) { setEditingPreviews([]); return; }
+    resolveUrls(FEATURED_BUCKET, editing.image_urls).then(setEditingPreviews);
+  }, [editing]);
+
   const onFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!editing) return;
     const files = Array.from(e.target.files ?? []).slice(0, 6);
-    const urls: string[] = [];
-    for (const f of files) {
-      urls.push(await new Promise<string>((res) => { const r = new FileReader(); r.onload = () => res(r.result as string); r.readAsDataURL(f); }));
-    }
-    setEditing({ ...editing, image_urls: [...editing.image_urls, ...urls].slice(0, 6) });
+    if (files.length === 0) return;
+    setUploading(true);
+    try {
+      const paths = await uploadFiles(FEATURED_BUCKET, files, `${Date.now()}/`);
+      setEditing({ ...editing, image_urls: [...editing.image_urls, ...paths].slice(0, 6) });
+    } catch (err: any) {
+      alert("Image upload failed: " + (err?.message || "unknown error"));
+    } finally { setUploading(false); e.target.value = ""; }
   };
 
   const save = async () => {
@@ -207,14 +225,14 @@ function FeaturedTab({ pw }: { pw: string }) {
       setEditing(null);
       await reload();
     }
-    catch (e) { console.error(e); alert("Save failed because static hosting cannot securely write admin data without backend permissions."); }
+    catch (e: any) { console.error(e); alert("Save failed: " + (e?.message || "unknown error")); }
     finally { setBusy(false); }
   };
 
   const remove = async (id: string) => {
     if (!confirm("Delete this featured property?")) return;
     const { error } = await supabase.from("featured_properties").delete().eq("id", id);
-    if (error) alert("Delete failed because static hosting cannot securely write admin data without backend permissions.");
+    if (error) alert("Delete failed: " + error.message);
     reload();
   };
 
