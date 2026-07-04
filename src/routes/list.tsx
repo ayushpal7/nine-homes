@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import emailjs from "@emailjs/browser";
 import { supabase } from "@/integrations/supabase/client";
+import { LISTING_BUCKET, uploadFiles } from "@/lib/storage";
 import {
   EMAILJS_PUBLIC_KEY,
   EMAILJS_SERVICE_ID,
@@ -12,27 +13,24 @@ import {
   WHATSAPP_URL,
 } from "@/lib/site";
 
+type PickedImage = { name: string; preview: string; file: File };
+
 export default function ListPage() {
   const formRef = useRef<HTMLFormElement>(null);
-  const [images, setImages] = useState<{ name: string; data: string }[]>([]);
+  const [images, setImages] = useState<PickedImage[]>([]);
   const [status, setStatus] = useState<"idle" | "sending" | "ok" | "err">("idle");
 
   useEffect(() => {
     emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
   }, []);
 
-  const onFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => () => {
+    images.forEach((i) => URL.revokeObjectURL(i.preview));
+  }, [images]);
+
+  const onFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []).slice(0, 5);
-    const out: { name: string; data: string }[] = [];
-    for (const f of files) {
-      const data = await new Promise<string>((res) => {
-        const r = new FileReader();
-        r.onload = () => res(r.result as string);
-        r.readAsDataURL(f);
-      });
-      out.push({ name: f.name, data });
-    }
-    setImages(out);
+    setImages(files.map((f) => ({ name: f.name, preview: URL.createObjectURL(f), file: f })));
   };
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -46,7 +44,12 @@ export default function ListPage() {
       payload.form_type = "List Your Property";
       payload.image_count = String(images.length);
       payload.image_names = images.map((i) => i.name).join(", ");
-      payload.image_1 = images[0]?.data?.slice(0, 45000) || "";
+
+      // Upload images to storage (private bucket)
+      const uploadedPaths = images.length > 0
+        ? await uploadFiles(LISTING_BUCKET, images.map((i) => i.file), `${Date.now()}/`)
+        : [];
+
       await Promise.all([
         emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_LIST, payload, { publicKey: EMAILJS_PUBLIC_KEY }),
         supabase.from("listing_submissions").insert({
@@ -55,6 +58,7 @@ export default function ListPage() {
           city: payload.city, address: payload.address, pincode: payload.pincode,
           size: payload.size, price: payload.price, spec_details: payload.spec_details,
           image_names: payload.image_names, image_count: images.length,
+          image_urls: uploadedPaths,
         }),
       ]);
       setStatus("ok");
