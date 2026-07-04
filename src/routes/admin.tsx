@@ -263,11 +263,12 @@ function FeaturedTab({ pw }: { pw: string }) {
             <label className="flex items-end gap-2 pb-3"><input type="checkbox" checked={editing.is_active} onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })} /><span>Active (visible on site)</span></label>
             <div className="sm:col-span-2">
               <span className="label-gold">Photos (up to 6)</span>
-              <input type="file" accept="image/*" multiple onChange={onFiles} className="field file:bg-gold file:border-0 file:text-navy-deep file:font-semibold file:rounded file:px-3 file:py-1 file:mr-3" />
+              <input type="file" accept="image/*" multiple onChange={onFiles} disabled={uploading} className="field file:bg-gold file:border-0 file:text-navy-deep file:font-semibold file:rounded file:px-3 file:py-1 file:mr-3" />
+              {uploading && <p className="text-xs text-white/60 mt-1">Uploading…</p>}
               <div className="flex flex-wrap gap-2 mt-3">
-                {editing.image_urls.map((u, i) => (
+                {editing.image_urls.map((_, i) => (
                   <div key={i} className="relative">
-                    <img src={u} className="w-24 h-24 object-cover rounded gold-border" alt="" />
+                    <img src={editingPreviews[i] ?? ""} className="w-24 h-24 object-cover rounded gold-border bg-navy" alt="" />
                     <button type="button" onClick={() => setEditing({ ...editing, image_urls: editing.image_urls.filter((_, j) => j !== i) })} className="absolute -top-2 -right-2 bg-gold text-navy-deep w-6 h-6 rounded-full text-xs">×</button>
                   </div>
                 ))}
