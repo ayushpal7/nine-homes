@@ -115,12 +115,19 @@ function InquiriesTab({ pw }: { pw: string }) {
 function ListingsTab({ pw }: { pw: string }) {
   const [rows, setRows] = useState<any[]>([]);
   const [error, setError] = useState("");
+  const [imgMap, setImgMap] = useState<Record<string, string[]>>({});
   useEffect(() => {
     if (!pw) return;
     supabase.from("listing_submissions").select("*").order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (error) setError("Private listing submissions are protected in static hosting. Check submitted emails at zero9home@gmail.com.");
-        setRows(data ?? []);
+      .then(async ({ data, error }) => {
+        if (error) { setError(error.message); return; }
+        const list = data ?? [];
+        setRows(list);
+        const map: Record<string, string[]> = {};
+        await Promise.all(list.map(async (r: any) => {
+          if (r.image_urls?.length) map[r.id] = await resolveUrls(LISTING_BUCKET, r.image_urls);
+        }));
+        setImgMap(map);
       });
   }, [pw]);
   return (
@@ -128,11 +135,24 @@ function ListingsTab({ pw }: { pw: string }) {
       <p className="font-mono text-xs text-white/60">{rows.length} owner submissions</p>
       {error && <p className="rounded-xl gold-border bg-navy-deep p-5 text-sm text-white/80">{error}</p>}
       {rows.map((r) => (
-        <div key={r.id} className="rounded-xl gold-border bg-navy-deep p-5 grid sm:grid-cols-4 gap-3 text-sm">
-          <div><div className="text-[10px] gold-text font-mono uppercase">When</div>{new Date(r.created_at).toLocaleString()}</div>
-          <div><div className="text-[10px] gold-text font-mono uppercase">Owner</div>{r.name}<br/><a href={`tel:${r.mobile}`} className="text-gold">{r.mobile}</a>{r.email && <><br/><span className="text-white/70 text-xs">{r.email}</span></>}</div>
-          <div><div className="text-[10px] gold-text font-mono uppercase">Property</div>{r.purpose} · {r.category}<br/><span className="text-white/70 text-xs">{r.address}, {r.city} - {r.pincode}</span></div>
-          <div><div className="text-[10px] gold-text font-mono uppercase">Price · Size</div>{r.price} · {r.size}<br/><span className="text-white/70 text-xs">📷 {r.image_count} photos: {r.image_names}</span><br/><span className="text-white/70 text-xs">{r.spec_details}</span></div>
+        <div key={r.id} className="rounded-xl gold-border bg-navy-deep p-5 space-y-3 text-sm">
+          <div className="grid sm:grid-cols-4 gap-3">
+            <div><div className="text-[10px] gold-text font-mono uppercase">When</div>{new Date(r.created_at).toLocaleString()}</div>
+            <div><div className="text-[10px] gold-text font-mono uppercase">Owner</div>{r.name}<br/><a href={`tel:${r.mobile}`} className="text-gold">{r.mobile}</a>{r.email && <><br/><span className="text-white/70 text-xs">{r.email}</span></>}</div>
+            <div><div className="text-[10px] gold-text font-mono uppercase">Property</div>{r.purpose} · {r.category}<br/><span className="text-white/70 text-xs">{r.address}, {r.city} - {r.pincode}</span></div>
+            <div><div className="text-[10px] gold-text font-mono uppercase">Price · Size</div>{r.price} · {r.size}<br/><span className="text-white/70 text-xs">{r.spec_details}</span></div>
+          </div>
+          {imgMap[r.id]?.length ? (
+            <div className="flex gap-2 flex-wrap pt-2 border-t border-[rgba(212,175,55,0.15)]">
+              {imgMap[r.id].map((u, i) => (
+                <a key={i} href={u} target="_blank" rel="noreferrer">
+                  <img src={u} alt="" className="w-24 h-24 object-cover rounded gold-border hover:opacity-80" />
+                </a>
+              ))}
+            </div>
+          ) : r.image_count ? (
+            <p className="text-xs text-white/50 pt-2 border-t border-[rgba(212,175,55,0.15)]">📷 {r.image_count} photos (not uploaded — legacy submission)</p>
+          ) : null}
         </div>
       ))}
     </div>
