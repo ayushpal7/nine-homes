@@ -111,6 +111,7 @@ export type Database = {
           id: string
           image_count: number | null
           image_names: string | null
+          image_urls: string[]
           mobile: string
           name: string
           pincode: string | null
@@ -128,6 +129,7 @@ export type Database = {
           id?: string
           image_count?: number | null
           image_names?: string | null
+          image_urls?: string[]
           mobile: string
           name: string
           pincode?: string | null
@@ -145,6 +147,7 @@ export type Database = {
           id?: string
           image_count?: number | null
           image_names?: string | null
+          image_urls?: string[]
           mobile?: string
           name?: string
           pincode?: string | null

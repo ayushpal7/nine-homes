@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell, SectionLabel, Field } from "@/lib/site";
+import { FEATURED_BUCKET, LISTING_BUCKET, resolveUrls, uploadFiles } from "@/lib/storage";
 
 const PW_KEY = "zero9_admin_pw";
 const ADMIN_PASSWORD = "Zero9Home@2026!";
@@ -91,7 +92,7 @@ function InquiriesTab({ pw }: { pw: string }) {
     if (!pw) return;
     supabase.from("inquiries").select("*").order("created_at", { ascending: false })
       .then(({ data, error }) => {
-        if (error) setError("Private submissions are protected in static hosting. Check submitted emails at zero9home@gmail.com.");
+        if (error) setError(error.message);
         setRows(data ?? []);
       });
   }, [pw]);
@@ -114,12 +115,19 @@ function InquiriesTab({ pw }: { pw: string }) {
 function ListingsTab({ pw }: { pw: string }) {
   const [rows, setRows] = useState<any[]>([]);
   const [error, setError] = useState("");
+  const [imgMap, setImgMap] = useState<Record<string, string[]>>({});
   useEffect(() => {
     if (!pw) return;
     supabase.from("listing_submissions").select("*").order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (error) setError("Private listing submissions are protected in static hosting. Check submitted emails at zero9home@gmail.com.");
-        setRows(data ?? []);
+      .then(async ({ data, error }) => {
+        if (error) { setError(error.message); return; }
+        const list = data ?? [];
+        setRows(list);
+        const map: Record<string, string[]> = {};
+        await Promise.all(list.map(async (r: any) => {
+          if (r.image_urls?.length) map[r.id] = await resolveUrls(LISTING_BUCKET, r.image_urls);
+        }));
+        setImgMap(map);
       });
   }, [pw]);
   return (
@@ -127,11 +135,24 @@ function ListingsTab({ pw }: { pw: string }) {
       <p className="font-mono text-xs text-white/60">{rows.length} owner submissions</p>
       {error && <p className="rounded-xl gold-border bg-navy-deep p-5 text-sm text-white/80">{error}</p>}
       {rows.map((r) => (
-        <div key={r.id} className="rounded-xl gold-border bg-navy-deep p-5 grid sm:grid-cols-4 gap-3 text-sm">
-          <div><div className="text-[10px] gold-text font-mono uppercase">When</div>{new Date(r.created_at).toLocaleString()}</div>
-          <div><div className="text-[10px] gold-text font-mono uppercase">Owner</div>{r.name}<br/><a href={`tel:${r.mobile}`} className="text-gold">{r.mobile}</a>{r.email && <><br/><span className="text-white/70 text-xs">{r.email}</span></>}</div>
-          <div><div className="text-[10px] gold-text font-mono uppercase">Property</div>{r.purpose} · {r.category}<br/><span className="text-white/70 text-xs">{r.address}, {r.city} - {r.pincode}</span></div>
-          <div><div className="text-[10px] gold-text font-mono uppercase">Price · Size</div>{r.price} · {r.size}<br/><span className="text-white/70 text-xs">📷 {r.image_count} photos: {r.image_names}</span><br/><span className="text-white/70 text-xs">{r.spec_details}</span></div>
+        <div key={r.id} className="rounded-xl gold-border bg-navy-deep p-5 space-y-3 text-sm">
+          <div className="grid sm:grid-cols-4 gap-3">
+            <div><div className="text-[10px] gold-text font-mono uppercase">When</div>{new Date(r.created_at).toLocaleString()}</div>
+            <div><div className="text-[10px] gold-text font-mono uppercase">Owner</div>{r.name}<br/><a href={`tel:${r.mobile}`} className="text-gold">{r.mobile}</a>{r.email && <><br/><span className="text-white/70 text-xs">{r.email}</span></>}</div>
+            <div><div className="text-[10px] gold-text font-mono uppercase">Property</div>{r.purpose} · {r.category}<br/><span className="text-white/70 text-xs">{r.address}, {r.city} - {r.pincode}</span></div>
+            <div><div className="text-[10px] gold-text font-mono uppercase">Price · Size</div>{r.price} · {r.size}<br/><span className="text-white/70 text-xs">{r.spec_details}</span></div>
+          </div>
+          {imgMap[r.id]?.length ? (
+            <div className="flex gap-2 flex-wrap pt-2 border-t border-[rgba(212,175,55,0.15)]">
+              {imgMap[r.id].map((u, i) => (
+                <a key={i} href={u} target="_blank" rel="noreferrer">
+                  <img src={u} alt="" className="w-24 h-24 object-cover rounded gold-border hover:opacity-80" />
+                </a>
+              ))}
+            </div>
+          ) : r.image_count ? (
+            <p className="text-xs text-white/50 pt-2 border-t border-[rgba(212,175,55,0.15)]">📷 {r.image_count} photos (not uploaded — legacy submission)</p>
+          ) : null}
         </div>
       ))}
     </div>
@@ -148,26 +169,44 @@ function FeaturedTab({ pw }: { pw: string }) {
   const [rows, setRows] = useState<any[]>([]);
   const [editing, setEditing] = useState<FeaturedInput | null>(null);
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [previews, setPreviews] = useState<Record<string, string[]>>({});
 
   const reload = () => {
     if (!pw) return Promise.resolve();
     return supabase.from("featured_properties").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (error) setError(error.message);
-        setRows(data ?? []);
+      .then(async ({ data, error }) => {
+        if (error) { setError(error.message); return; }
+        const list = data ?? [];
+        setRows(list);
+        const map: Record<string, string[]> = {};
+        await Promise.all(list.map(async (r: any) => {
+          if (r.image_urls?.length) map[r.id] = await resolveUrls(FEATURED_BUCKET, r.image_urls);
+        }));
+        setPreviews(map);
       });
   };
   useEffect(() => { reload(); /* eslint-disable-next-line */ }, [pw]);
 
+  // Resolve signed URLs for the images currently attached to the editing form
+  const [editingPreviews, setEditingPreviews] = useState<string[]>([]);
+  useEffect(() => {
+    if (!editing) { setEditingPreviews([]); return; }
+    resolveUrls(FEATURED_BUCKET, editing.image_urls).then(setEditingPreviews);
+  }, [editing]);
+
   const onFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!editing) return;
     const files = Array.from(e.target.files ?? []).slice(0, 6);
-    const urls: string[] = [];
-    for (const f of files) {
-      urls.push(await new Promise<string>((res) => { const r = new FileReader(); r.onload = () => res(r.result as string); r.readAsDataURL(f); }));
-    }
-    setEditing({ ...editing, image_urls: [...editing.image_urls, ...urls].slice(0, 6) });
+    if (files.length === 0) return;
+    setUploading(true);
+    try {
+      const paths = await uploadFiles(FEATURED_BUCKET, files, `${Date.now()}/`);
+      setEditing({ ...editing, image_urls: [...editing.image_urls, ...paths].slice(0, 6) });
+    } catch (err: any) {
+      alert("Image upload failed: " + (err?.message || "unknown error"));
+    } finally { setUploading(false); e.target.value = ""; }
   };
 
   const save = async () => {
@@ -186,14 +225,14 @@ function FeaturedTab({ pw }: { pw: string }) {
       setEditing(null);
       await reload();
     }
-    catch (e) { console.error(e); alert("Save failed because static hosting cannot securely write admin data without backend permissions."); }
+    catch (e: any) { console.error(e); alert("Save failed: " + (e?.message || "unknown error")); }
     finally { setBusy(false); }
   };
 
   const remove = async (id: string) => {
     if (!confirm("Delete this featured property?")) return;
     const { error } = await supabase.from("featured_properties").delete().eq("id", id);
-    if (error) alert("Delete failed because static hosting cannot securely write admin data without backend permissions.");
+    if (error) alert("Delete failed: " + error.message);
     reload();
   };
 
@@ -224,11 +263,12 @@ function FeaturedTab({ pw }: { pw: string }) {
             <label className="flex items-end gap-2 pb-3"><input type="checkbox" checked={editing.is_active} onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })} /><span>Active (visible on site)</span></label>
             <div className="sm:col-span-2">
               <span className="label-gold">Photos (up to 6)</span>
-              <input type="file" accept="image/*" multiple onChange={onFiles} className="field file:bg-gold file:border-0 file:text-navy-deep file:font-semibold file:rounded file:px-3 file:py-1 file:mr-3" />
+              <input type="file" accept="image/*" multiple onChange={onFiles} disabled={uploading} className="field file:bg-gold file:border-0 file:text-navy-deep file:font-semibold file:rounded file:px-3 file:py-1 file:mr-3" />
+              {uploading && <p className="text-xs text-white/60 mt-1">Uploading…</p>}
               <div className="flex flex-wrap gap-2 mt-3">
-                {editing.image_urls.map((u, i) => (
+                {editing.image_urls.map((_, i) => (
                   <div key={i} className="relative">
-                    <img src={u} className="w-24 h-24 object-cover rounded gold-border" alt="" />
+                    <img src={editingPreviews[i] ?? ""} className="w-24 h-24 object-cover rounded gold-border bg-navy" alt="" />
                     <button type="button" onClick={() => setEditing({ ...editing, image_urls: editing.image_urls.filter((_, j) => j !== i) })} className="absolute -top-2 -right-2 bg-gold text-navy-deep w-6 h-6 rounded-full text-xs">×</button>
                   </div>
                 ))}
@@ -245,7 +285,7 @@ function FeaturedTab({ pw }: { pw: string }) {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {rows.map((r) => (
           <div key={r.id} className={`rounded-xl gold-border bg-navy-deep overflow-hidden ${!r.is_active && "opacity-50"}`}>
-            {r.image_urls?.[0] ? <img src={r.image_urls[0]} alt={r.title} className="aspect-[4/3] w-full object-cover" /> : <div className="aspect-[4/3] grid place-items-center text-white/20 font-display text-6xl">9</div>}
+            {previews[r.id]?.[0] ? <img src={previews[r.id][0]} alt={r.title} className="aspect-[4/3] w-full object-cover" /> : <div className="aspect-[4/3] grid place-items-center text-white/20 font-display text-6xl">9</div>}
             <div className="p-4 space-y-2">
               <div className="flex justify-between text-xs font-mono"><span className="gold-text">{r.tag}</span><span className="text-white/60">#{r.sort_order} {r.is_active ? "" : "(hidden)"}</span></div>
               <h4 className="font-display text-lg">{r.title}</h4>

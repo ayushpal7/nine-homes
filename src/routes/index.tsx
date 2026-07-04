@@ -86,11 +86,21 @@ type FeaturedRow = {
 
 function Featured() {
   const [listings, setListings] = useState<FeaturedRow[]>([]);
+  const [previews, setPreviews] = useState<Record<string, string[]>>({});
   useEffect(() => {
-    supabase.from("featured_properties").select("*").eq("is_active", true)
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false })
-      .then(({ data }) => setListings((data as FeaturedRow[]) ?? []));
+    (async () => {
+      const { resolveUrls, FEATURED_BUCKET } = await import("@/lib/storage");
+      const { data } = await supabase.from("featured_properties").select("*").eq("is_active", true)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false });
+      const list = (data as FeaturedRow[]) ?? [];
+      setListings(list);
+      const map: Record<string, string[]> = {};
+      await Promise.all(list.map(async (r) => {
+        if (r.image_urls?.length) map[r.id] = await resolveUrls(FEATURED_BUCKET, r.image_urls);
+      }));
+      setPreviews(map);
+    })();
   }, []);
 
   return (
@@ -105,8 +115,8 @@ function Featured() {
             {listings.map((l) => (
               <article key={l.id} className="rounded-2xl overflow-hidden bg-surface border border-[rgba(212,175,55,0.25)] group hover:gold-glow transition-all">
                 <div className="aspect-[4/3] bg-gradient-to-br from-navy to-navy-deep relative overflow-hidden">
-                  {l.image_urls[0] ? (
-                    <img src={l.image_urls[0]} alt={l.title} className="w-full h-full object-cover" />
+                  {(previews[l.id]?.[0] ?? l.image_urls[0]) ? (
+                    <img src={previews[l.id]?.[0] ?? l.image_urls[0]} alt={l.title} className="w-full h-full object-cover" />
                   ) : (
                     <span className="absolute inset-0 grid place-items-center font-display text-7xl text-white/10">9</span>
                   )}
