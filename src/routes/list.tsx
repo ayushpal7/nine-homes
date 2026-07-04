@@ -129,7 +129,7 @@ export default function ListPage() {
               {images.length > 0 && (
                 <div className="flex gap-2 mt-3 flex-wrap">
                   {images.map((img, i) => (
-                    <img key={i} src={img.data} alt={img.name} className="w-20 h-20 object-cover rounded gold-border" />
+                    <img key={i} src={img.preview} alt={img.name} className="w-20 h-20 object-cover rounded gold-border" />
                   ))}
                 </div>
               )}
