@@ -285,7 +285,7 @@ function FeaturedTab({ pw }: { pw: string }) {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {rows.map((r) => (
           <div key={r.id} className={`rounded-xl gold-border bg-navy-deep overflow-hidden ${!r.is_active && "opacity-50"}`}>
-            {r.image_urls?.[0] ? <img src={r.image_urls[0]} alt={r.title} className="aspect-[4/3] w-full object-cover" /> : <div className="aspect-[4/3] grid place-items-center text-white/20 font-display text-6xl">9</div>}
+            {previews[r.id]?.[0] ? <img src={previews[r.id][0]} alt={r.title} className="aspect-[4/3] w-full object-cover" /> : <div className="aspect-[4/3] grid place-items-center text-white/20 font-display text-6xl">9</div>}
             <div className="p-4 space-y-2">
               <div className="flex justify-between text-xs font-mono"><span className="gold-text">{r.tag}</span><span className="text-white/60">#{r.sort_order} {r.is_active ? "" : "(hidden)"}</span></div>
               <h4 className="font-display text-lg">{r.title}</h4>
