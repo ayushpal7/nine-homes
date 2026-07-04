@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell, SectionLabel, Field } from "@/lib/site";
+import { FEATURED_BUCKET, LISTING_BUCKET, resolveUrls, uploadFiles } from "@/lib/storage";
 
 const PW_KEY = "zero9_admin_pw";
 const ADMIN_PASSWORD = "Zero9Home@2026!";
