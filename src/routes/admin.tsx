@@ -92,7 +92,7 @@ function InquiriesTab({ pw }: { pw: string }) {
     if (!pw) return;
     supabase.from("inquiries").select("*").order("created_at", { ascending: false })
       .then(({ data, error }) => {
-        if (error) setError("Private submissions are protected in static hosting. Check submitted emails at zero9home@gmail.com.");
+        if (error) setError(error.message);
         setRows(data ?? []);
       });
   }, [pw]);
