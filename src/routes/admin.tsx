@@ -201,7 +201,17 @@ function FeaturedTab({ pw }: { pw: string }) {
     if (files.length === 0) return;
     setUploading(true);
     try {
-      const paths = await uploadFiles(FEATURED_BUCKET, files, `${Date.now()}/`);
+      const paths: string[] = [];
+      for (const file of files) {
+        const buf = await file.arrayBuffer();
+        let bin = ""; const bytes = new Uint8Array(buf);
+        for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+        const data_base64 = btoa(bin);
+        const res = await adminCall<{ path: string }>(pw, "upload_featured_image", {
+          filename: file.name, content_type: file.type, data_base64,
+        });
+        paths.push(res.path);
+      }
       setEditing({ ...editing, image_urls: [...editing.image_urls, ...paths].slice(0, 6) });
     } catch (err: any) {
       alert("Image upload failed: " + (err?.message || "unknown error"));
