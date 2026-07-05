@@ -178,8 +178,8 @@ function SatishBio() {
                 His hands-on approach, profound legal astuteness, and direct property screening have made him a highly trusted lead advisor for property buyers, sellers, and landlords alike.
               </p>
             </div>
-            <div className="grid sm:grid-cols-3 gap-4">
-              {[["24+", "Years"], ["2.4K+", "Families"], ["6", "Cities"]].map(([n, l]) => (
+            <div className="grid sm:grid-cols-2 gap-4">
+              {[["24+", "Years"], ["6", "Cities"]].map(([n, l]) => (
                 <div key={l} className="rounded-2xl gold-border p-6 bg-navy-deep text-center">
                   <div className="font-display text-3xl gold-text">{n}</div>
                   <div className="font-mono text-[10px] tracking-widest uppercase mt-1 text-white/80">{l}</div>
