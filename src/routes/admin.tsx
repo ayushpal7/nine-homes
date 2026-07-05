@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell, SectionLabel, Field } from "@/lib/site";
-import { FEATURED_BUCKET, LISTING_BUCKET, resolveUrls, uploadFiles } from "@/lib/storage";
+import { FEATURED_BUCKET } from "@/lib/storage";
 
 const PW_KEY = "zero9_admin_pw";
-const ADMIN_PASSWORD = "1507@z9h";
 
 type FeaturedInput = {
   id?: string;
@@ -20,28 +19,45 @@ type FeaturedInput = {
   sort_order: number;
 };
 
+async function adminCall<T = any>(pw: string, action: string, payload: Record<string, unknown> = {}): Promise<T> {
+  const { data, error } = await supabase.functions.invoke("admin-api", {
+    body: { action, payload },
+    headers: { "x-admin-password": pw },
+  });
+  if (error) throw new Error(error.message);
+  if ((data as any)?.error) throw new Error((data as any).error);
+  return data as T;
+}
+
 export default function AdminPage() {
   const [pw, setPw] = useState<string>("");
   const [authed, setAuthed] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [loginError, setLoginError] = useState("");
   const [tab, setTab] = useState<"inquiries" | "listings" | "featured">("inquiries");
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? sessionStorage.getItem(PW_KEY) : null;
-    if (saved === ADMIN_PASSWORD) {
-      setPw(saved);
-      setAuthed(true);
-    }
+    if (!saved) return;
+    (async () => {
+      try {
+        await adminCall(saved, "list_featured");
+        setPw(saved); setAuthed(true);
+      } catch { sessionStorage.removeItem(PW_KEY); }
+    })();
   }, []);
 
   const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const password = (new FormData(e.currentTarget).get("password") as string) || "";
-    if (password === ADMIN_PASSWORD) {
+    setChecking(true); setLoginError("");
+    try {
+      await adminCall(password, "list_featured");
       sessionStorage.setItem(PW_KEY, password);
       setPw(password); setAuthed(true);
-    } else {
-      alert("Wrong password");
-    }
+    } catch (err: any) {
+      setLoginError(err?.message?.includes("unauthorized") ? "Wrong password" : (err?.message || "Login failed"));
+    } finally { setChecking(false); }
   };
 
   if (!authed) {
@@ -52,7 +68,8 @@ export default function AdminPage() {
             <SectionLabel kicker="Restricted" title={<>Admin <em className="gold-text not-italic">Sign In</em></>} />
             <form onSubmit={onLogin} className="mt-10 p-8 rounded-2xl gold-border bg-surface space-y-5">
               <Field label="Password" name="password" type="password" required />
-              <button className="btn-gold w-full">Enter</button>
+              {loginError && <p className="text-sm text-red-300">{loginError}</p>}
+              <button disabled={checking} className="btn-gold w-full">{checking ? "Checking…" : "Enter"}</button>
             </form>
           </div>
         </section>
@@ -90,11 +107,9 @@ function InquiriesTab({ pw }: { pw: string }) {
   const [error, setError] = useState("");
   useEffect(() => {
     if (!pw) return;
-    supabase.from("inquiries").select("*").order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (error) setError(error.message);
-        setRows(data ?? []);
-      });
+    adminCall<{ rows: any[] }>(pw, "list_inquiries")
+      .then((d) => setRows(d.rows ?? []))
+      .catch((e) => setError(e.message));
   }, [pw]);
   return (
     <div className="space-y-3">
@@ -115,20 +130,11 @@ function InquiriesTab({ pw }: { pw: string }) {
 function ListingsTab({ pw }: { pw: string }) {
   const [rows, setRows] = useState<any[]>([]);
   const [error, setError] = useState("");
-  const [imgMap, setImgMap] = useState<Record<string, string[]>>({});
   useEffect(() => {
     if (!pw) return;
-    supabase.from("listing_submissions").select("*").order("created_at", { ascending: false })
-      .then(async ({ data, error }) => {
-        if (error) { setError(error.message); return; }
-        const list = data ?? [];
-        setRows(list);
-        const map: Record<string, string[]> = {};
-        await Promise.all(list.map(async (r: any) => {
-          if (r.image_urls?.length) map[r.id] = await resolveUrls(LISTING_BUCKET, r.image_urls);
-        }));
-        setImgMap(map);
-      });
+    adminCall<{ rows: any[] }>(pw, "list_listings")
+      .then((d) => setRows(d.rows ?? []))
+      .catch((e) => setError(e.message));
   }, [pw]);
   return (
     <div className="space-y-3">
@@ -142,9 +148,9 @@ function ListingsTab({ pw }: { pw: string }) {
             <div><div className="text-[10px] gold-text font-mono uppercase">Property</div>{r.purpose} · {r.category}<br/><span className="text-white/70 text-xs">{r.address}, {r.city} - {r.pincode}</span></div>
             <div><div className="text-[10px] gold-text font-mono uppercase">Price · Size</div>{r.price} · {r.size}<br/><span className="text-white/70 text-xs">{r.spec_details}</span></div>
           </div>
-          {imgMap[r.id]?.length ? (
+          {r.image_signed?.length ? (
             <div className="flex gap-2 flex-wrap pt-2 border-t border-[rgba(212,175,55,0.15)]">
-              {imgMap[r.id].map((u, i) => (
+              {r.image_signed.map((u: string, i: number) => (
                 <a key={i} href={u} target="_blank" rel="noreferrer">
                   <img src={u} alt="" className="w-24 h-24 object-cover rounded gold-border hover:opacity-80" />
                 </a>
@@ -171,30 +177,23 @@ function FeaturedTab({ pw }: { pw: string }) {
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
-  const [previews, setPreviews] = useState<Record<string, string[]>>({});
 
-  const reload = () => {
-    if (!pw) return Promise.resolve();
-    return supabase.from("featured_properties").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false })
-      .then(async ({ data, error }) => {
-        if (error) { setError(error.message); return; }
-        const list = data ?? [];
-        setRows(list);
-        const map: Record<string, string[]> = {};
-        await Promise.all(list.map(async (r: any) => {
-          if (r.image_urls?.length) map[r.id] = await resolveUrls(FEATURED_BUCKET, r.image_urls);
-        }));
-        setPreviews(map);
-      });
+  const reload = async () => {
+    if (!pw) return;
+    try {
+      const d = await adminCall<{ rows: any[] }>(pw, "list_featured");
+      setRows(d.rows ?? []);
+    } catch (e: any) { setError(e.message); }
   };
   useEffect(() => { reload(); /* eslint-disable-next-line */ }, [pw]);
 
-  // Resolve signed URLs for the images currently attached to the editing form
   const [editingPreviews, setEditingPreviews] = useState<string[]>([]);
   useEffect(() => {
     if (!editing) { setEditingPreviews([]); return; }
-    resolveUrls(FEATURED_BUCKET, editing.image_urls).then(setEditingPreviews);
-  }, [editing]);
+    adminCall<{ urls: string[] }>(pw, "sign_urls", { bucket: FEATURED_BUCKET, paths: editing.image_urls })
+      .then((d) => setEditingPreviews(d.urls ?? []))
+      .catch(() => setEditingPreviews([]));
+  }, [editing, pw]);
 
   const onFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!editing) return;
@@ -202,7 +201,17 @@ function FeaturedTab({ pw }: { pw: string }) {
     if (files.length === 0) return;
     setUploading(true);
     try {
-      const paths = await uploadFiles(FEATURED_BUCKET, files, `${Date.now()}/`);
+      const paths: string[] = [];
+      for (const file of files) {
+        const buf = await file.arrayBuffer();
+        let bin = ""; const bytes = new Uint8Array(buf);
+        for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+        const data_base64 = btoa(bin);
+        const res = await adminCall<{ path: string }>(pw, "upload_featured_image", {
+          filename: file.name, content_type: file.type, data_base64,
+        });
+        paths.push(res.path);
+      }
       setEditing({ ...editing, image_urls: [...editing.image_urls, ...paths].slice(0, 6) });
     } catch (err: any) {
       alert("Image upload failed: " + (err?.message || "unknown error"));
@@ -213,15 +222,7 @@ function FeaturedTab({ pw }: { pw: string }) {
     if (!editing) return;
     setBusy(true);
     try {
-      const payload = {
-        title: editing.title, location: editing.location, price: editing.price, tag: editing.tag,
-        bhk: editing.bhk || null, size: editing.size || null, description: editing.description || null,
-        image_urls: editing.image_urls, is_active: editing.is_active, sort_order: editing.sort_order,
-      };
-      const result = editing.id
-        ? await supabase.from("featured_properties").update(payload).eq("id", editing.id)
-        : await supabase.from("featured_properties").insert(payload);
-      if (result.error) throw result.error;
+      await adminCall(pw, "upsert_featured", editing as unknown as Record<string, unknown>);
       setEditing(null);
       await reload();
     }
@@ -231,9 +232,10 @@ function FeaturedTab({ pw }: { pw: string }) {
 
   const remove = async (id: string) => {
     if (!confirm("Delete this featured property?")) return;
-    const { error } = await supabase.from("featured_properties").delete().eq("id", id);
-    if (error) alert("Delete failed: " + error.message);
-    reload();
+    try {
+      await adminCall(pw, "delete_featured", { id });
+      await reload();
+    } catch (e: any) { alert("Delete failed: " + e.message); }
   };
 
   return (
@@ -285,7 +287,7 @@ function FeaturedTab({ pw }: { pw: string }) {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {rows.map((r) => (
           <div key={r.id} className={`rounded-xl gold-border bg-navy-deep overflow-hidden ${!r.is_active && "opacity-50"}`}>
-            {previews[r.id]?.[0] ? <img src={previews[r.id][0]} alt={r.title} className="aspect-[4/3] w-full object-cover" /> : <div className="aspect-[4/3] grid place-items-center text-white/20 font-display text-6xl">9</div>}
+            {r.image_signed?.[0] ? <img src={r.image_signed[0]} alt={r.title} className="aspect-[4/3] w-full object-cover" /> : <div className="aspect-[4/3] grid place-items-center text-white/20 font-display text-6xl">9</div>}
             <div className="p-4 space-y-2">
               <div className="flex justify-between text-xs font-mono"><span className="gold-text">{r.tag}</span><span className="text-white/60">#{r.sort_order} {r.is_active ? "" : "(hidden)"}</span></div>
               <h4 className="font-display text-lg">{r.title}</h4>
