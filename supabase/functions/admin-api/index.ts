@@ -101,6 +101,20 @@ Deno.serve(async (req) => {
         if (bucket !== LISTING_BUCKET && bucket !== FEATURED_BUCKET) return json({ error: "invalid bucket" }, 400);
         return json({ urls: await signMany(admin, bucket, paths) });
       }
+      case "upload_featured_image": {
+        const filename = String(payload.filename ?? "file");
+        const contentType = String(payload.content_type ?? "application/octet-stream");
+        const b64 = String(payload.data_base64 ?? "");
+        if (!b64) return json({ error: "missing data" }, 400);
+        const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+        const safe = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `${Date.now()}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
+        const { error } = await admin.storage.from(FEATURED_BUCKET).upload(path, bytes, {
+          cacheControl: "3600", upsert: false, contentType,
+        });
+        if (error) throw error;
+        return json({ path });
+      }
       default:
         return json({ error: "unknown action" }, 400);
     }
