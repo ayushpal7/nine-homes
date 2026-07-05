@@ -226,9 +226,12 @@ function Areas() {
 /* ---------------- TESTIMONIALS ---------------- */
 function Testimonials() {
   const t = [
-    { name: "Rajesh Mehra", role: "Vasant Kunj Resident", quote: "Satish ji guided us throughout the entire process of acquiring our 3BHK flat in Vasant Kunj and ensured everything was transparent and hassle-free. His documentation checks are incredibly thorough." },
-    { name: "Rohan & Priya", role: "Gurgaon Tenants", quote: "We were looking for an executive apartment rental in Gurgaon for months. One single interaction with Satish Pal and we had our hands on a fully verified home within our tight timeline. Outstanding service!" },
-    { name: "Anil Verma", role: "Property Seller", quote: "Sold my luxury floor in Noida Sector 150 at our exact target price without any third-party pressure. Satish's direct mediation and deep networks are simply unmatched. Elegant real estate at its finest!" },
+    { name: "Chandan Kumar", role: "1 BHK Flat · Trilok Puri, Delhi", quote: "Satish ji made the entire home-buying journey effortless. From site visits to paperwork, everything was transparent and on time." },
+    { name: "Dinesh Kumar", role: "2 BHK Flat · Trilok Puri, Delhi", quote: "Got exactly the 2 BHK I wanted within my budget. Satish ji's local knowledge of Trilok Puri is unmatched — highly recommended." },
+    { name: "Amit Kumar", role: "2 BHK Flat · Patparganj, Delhi", quote: "Shifted into our new Patparganj flat without a single hiccup. Legal checks and registration were handled end-to-end by Zero9Home." },
+    { name: "Alka Gupta", role: "Seller · 1 BHK Flat, Trilok Puri, Delhi", quote: "Sold my flat at the right price without any broker chain confusion. Satish ji brought a genuine buyer and closed it cleanly." },
+    { name: "Raj Pal", role: "Seller · 1 BHK Flat, Trilok Puri, Delhi", quote: "I had tried listing on my own for months. Zero9Home closed the deal in weeks with full documentation support." },
+    { name: "Ravinder Mahor", role: "2 BHK Flat · Trilok Puri, Delhi", quote: "Trustworthy, patient, and thoroughly professional. Satish ji personally showed us multiple options until we picked the right one." },
   ];
   return (
     <section className="py-24 px-5 bg-surface/40">
