@@ -264,7 +264,7 @@ function FeaturedTab({ pw }: { pw: string }) {
             <label className="block"><span className="label-gold">Sort order</span><input type="number" className="field" value={editing.sort_order} onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} /></label>
             <label className="flex items-end gap-2 pb-3"><input type="checkbox" checked={editing.is_active} onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })} /><span>Active (visible on site)</span></label>
             <div className="sm:col-span-2">
-              <span className="label-gold">Photos (up to 6)</span>
+              <span className="label-gold">Photos — 1 cover + up to 5 more (6 total)</span>
               <input type="file" accept="image/*" multiple onChange={onFiles} disabled={uploading} className="field file:bg-gold file:border-0 file:text-navy-deep file:font-semibold file:rounded file:px-3 file:py-1 file:mr-3" />
               {uploading && <p className="text-xs text-white/60 mt-1">Uploading…</p>}
               <div className="flex flex-wrap gap-2 mt-3">
