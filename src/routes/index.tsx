@@ -87,6 +87,9 @@ type FeaturedRow = {
 function Featured() {
   const [listings, setListings] = useState<FeaturedRow[]>([]);
   const [previews, setPreviews] = useState<Record<string, string[]>>({});
+  const [activeIdx, setActiveIdx] = useState<Record<string, number>>({});
+  const [lightbox, setLightbox] = useState<{ id: string; i: number } | null>(null);
+
   useEffect(() => {
     (async () => {
       const { resolveUrls, FEATURED_BUCKET } = await import("@/lib/storage");
@@ -103,6 +106,22 @@ function Featured() {
     })();
   }, []);
 
+  const step = (id: string, total: number, dir: 1 | -1) =>
+    setActiveIdx((s) => ({ ...s, [id]: ((s[id] ?? 0) + dir + total) % total }));
+
+  const lightboxUrls = lightbox ? (previews[lightbox.id] ?? []) : [];
+
+  useEffect(() => {
+    if (!lightbox) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightbox(null);
+      if (e.key === "ArrowRight") setLightbox((s) => s && { ...s, i: (s.i + 1) % lightboxUrls.length });
+      if (e.key === "ArrowLeft") setLightbox((s) => s && { ...s, i: (s.i - 1 + lightboxUrls.length) % lightboxUrls.length });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightbox, lightboxUrls.length]);
+
   return (
     <section className="py-24 px-5">
       <div className="max-w-7xl mx-auto">
@@ -112,17 +131,36 @@ function Featured() {
           <p className="mt-14 text-white/60 font-mono text-sm">New featured properties coming soon. Meanwhile, share your requirement on Buy/Rent.</p>
         ) : (
           <div className="mt-14 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {listings.map((l) => (
+            {listings.map((l) => {
+              const urls = previews[l.id] ?? [];
+              const idx = activeIdx[l.id] ?? 0;
+              const current = urls[idx] ?? urls[0];
+              const total = urls.length;
+              return (
               <article key={l.id} className="rounded-2xl overflow-hidden bg-surface border border-[rgba(212,175,55,0.25)] group hover:gold-glow transition-all">
                 <div className="aspect-[4/3] bg-gradient-to-br from-navy to-navy-deep relative overflow-hidden">
-                  {(previews[l.id]?.[0] ?? l.image_urls[0]) ? (
-                    <img src={previews[l.id]?.[0] ?? l.image_urls[0]} alt={l.title} className="w-full h-full object-cover" />
+                  {current ? (
+                    <button type="button" onClick={() => setLightbox({ id: l.id, i: idx })} className="block w-full h-full">
+                      <img src={current} alt={`${l.title} photo ${idx + 1}`} className="w-full h-full object-cover" />
+                    </button>
                   ) : (
                     <span className="absolute inset-0 grid place-items-center font-display text-7xl text-white/10">9</span>
                   )}
                   <span className="absolute top-4 left-4 bg-gold text-navy-deep text-[10px] font-mono font-semibold px-3 py-1.5 rounded-full tracking-wider">{l.tag.toUpperCase()}</span>
-                  {l.image_urls.length > 1 && (
-                    <span className="absolute top-4 right-4 bg-navy-deep/80 text-white text-[10px] font-mono px-3 py-1.5 rounded-full">📷 {l.image_urls.length} Photos</span>
+                  {total > 1 && (
+                    <>
+                      <span className="absolute top-4 right-4 bg-navy-deep/80 text-white text-[10px] font-mono px-3 py-1.5 rounded-full">📷 {idx + 1}/{total}</span>
+                      <button type="button" aria-label="Previous photo" onClick={(e) => { e.stopPropagation(); step(l.id, total, -1); }}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-navy-deep/70 hover:bg-navy-deep text-gold grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity">‹</button>
+                      <button type="button" aria-label="Next photo" onClick={(e) => { e.stopPropagation(); step(l.id, total, 1); }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-navy-deep/70 hover:bg-navy-deep text-gold grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity">›</button>
+                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                        {urls.map((_, i) => (
+                          <button key={i} type="button" aria-label={`Go to photo ${i + 1}`} onClick={(e) => { e.stopPropagation(); setActiveIdx((s) => ({ ...s, [l.id]: i })); }}
+                            className={`w-1.5 h-1.5 rounded-full transition-all ${i === idx ? "bg-gold w-4" : "bg-white/50"}`} />
+                        ))}
+                      </div>
+                    </>
                   )}
                 </div>
                 <div className="p-6">
@@ -145,13 +183,29 @@ function Featured() {
                   </div>
                 </div>
               </article>
-            ))}
+            );})}
           </div>
         )}
         <div className="text-center mt-12">
           <a href="/explore" className="btn-gold">Buy/Rent →</a>
         </div>
       </div>
+
+      {lightbox && lightboxUrls.length > 0 && (
+        <div className="fixed inset-0 z-[100] bg-black/90 grid place-items-center p-4" onClick={() => setLightbox(null)}>
+          <button type="button" aria-label="Close" onClick={() => setLightbox(null)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-navy-deep/80 text-gold grid place-items-center text-xl">×</button>
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 text-white/80 font-mono text-xs">{lightbox.i + 1} / {lightboxUrls.length}</div>
+          <img src={lightboxUrls[lightbox.i]} alt="" className="max-h-[85vh] max-w-[95vw] object-contain rounded-lg" onClick={(e) => e.stopPropagation()} />
+          {lightboxUrls.length > 1 && (
+            <>
+              <button type="button" aria-label="Previous" onClick={(e) => { e.stopPropagation(); setLightbox((s) => s && { ...s, i: (s.i - 1 + lightboxUrls.length) % lightboxUrls.length }); }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-navy-deep/80 hover:bg-navy-deep text-gold grid place-items-center text-2xl">‹</button>
+              <button type="button" aria-label="Next" onClick={(e) => { e.stopPropagation(); setLightbox((s) => s && { ...s, i: (s.i + 1) % lightboxUrls.length }); }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-navy-deep/80 hover:bg-navy-deep text-gold grid place-items-center text-2xl">›</button>
+            </>
+          )}
+        </div>
+      )}
     </section>
   );
 }
