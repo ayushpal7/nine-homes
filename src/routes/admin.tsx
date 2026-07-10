@@ -19,14 +19,29 @@ type FeaturedInput = {
   sort_order: number;
 };
 
+const FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-api`;
+const ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+
 async function adminCall<T = any>(pw: string, action: string, payload: Record<string, unknown> = {}): Promise<T> {
-  const { data, error } = await supabase.functions.invoke("admin-api", {
-    body: { action, payload },
-    headers: { "x-admin-password": pw },
+  const res = await fetch(FN_URL, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      apikey: ANON,
+      authorization: `Bearer ${ANON}`,
+      "x-admin-password": pw,
+    },
+    body: JSON.stringify({ action, payload }),
   });
-  if (error) throw new Error(error.message);
-  if ((data as any)?.error) throw new Error((data as any).error);
-  return data as T;
+  const text = await res.text();
+  let body: any = null;
+  try { body = text ? JSON.parse(text) : null; } catch { body = { error: text }; }
+  if (!res.ok) {
+    if (res.status === 401) throw new Error("unauthorized");
+    throw new Error(body?.error || `HTTP ${res.status}`);
+  }
+  if (body?.error) throw new Error(body.error);
+  return body as T;
 }
 
 export default function AdminPage() {
