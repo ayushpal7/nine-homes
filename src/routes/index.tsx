@@ -134,30 +134,51 @@ function Featured() {
             {listings.map((l) => {
               const urls = previews[l.id] ?? [];
               const idx = activeIdx[l.id] ?? 0;
-              const current = urls[idx] ?? urls[0];
               const total = urls.length;
+              const onTouchStart = (e: React.TouchEvent) => { (e.currentTarget as any)._sx = e.touches[0].clientX; };
+              const onTouchEnd = (e: React.TouchEvent) => {
+                const sx = (e.currentTarget as any)._sx as number | undefined;
+                if (sx == null || total < 2) return;
+                const dx = e.changedTouches[0].clientX - sx;
+                if (Math.abs(dx) > 40) step(l.id, total, dx < 0 ? 1 : -1);
+              };
               return (
-              <article key={l.id} className="rounded-2xl overflow-hidden bg-surface border border-[rgba(212,175,55,0.25)] group hover:gold-glow transition-all">
-                <div className="aspect-[4/3] bg-gradient-to-br from-navy to-navy-deep relative overflow-hidden">
-                  {current ? (
-                    <button type="button" onClick={() => setLightbox({ id: l.id, i: idx })} className="block w-full h-full">
-                      <img src={current} alt={`${l.title} photo ${idx + 1}`} className="w-full h-full object-cover" />
-                    </button>
-                  ) : (
+              <article key={l.id} className="rounded-2xl overflow-hidden bg-surface border border-[rgba(212,175,55,0.25)] group hover:gold-glow transition-shadow">
+                <div
+                  className="aspect-[4/3] bg-gradient-to-br from-navy to-navy-deep relative overflow-hidden select-none"
+                  onTouchStart={onTouchStart}
+                  onTouchEnd={onTouchEnd}
+                >
+                  {urls.length === 0 ? (
                     <span className="absolute inset-0 grid place-items-center font-display text-7xl text-white/10">9</span>
+                  ) : (
+                    <button type="button" onClick={() => setLightbox({ id: l.id, i: idx })} className="block w-full h-full relative" aria-label="Open photo">
+                      {urls.map((u, i) => (
+                        <img
+                          key={u}
+                          src={u}
+                          alt={`${l.title} photo ${i + 1}`}
+                          loading={i === 0 ? "eager" : "lazy"}
+                          decoding="async"
+                          draggable={false}
+                          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 will-change-[opacity]"
+                          style={{ opacity: i === idx ? 1 : 0 }}
+                        />
+                      ))}
+                    </button>
                   )}
-                  <span className="absolute top-4 left-4 bg-gold text-navy-deep text-[10px] font-mono font-semibold px-3 py-1.5 rounded-full tracking-wider">{l.tag.toUpperCase()}</span>
+                  <span className="absolute top-4 left-4 bg-gold text-navy-deep text-[10px] font-mono font-semibold px-3 py-1.5 rounded-full tracking-wider z-10">{l.tag.toUpperCase()}</span>
                   {total > 1 && (
                     <>
-                      <span className="absolute top-4 right-4 bg-navy-deep/80 text-white text-[10px] font-mono px-3 py-1.5 rounded-full">📷 {idx + 1}/{total}</span>
+                      <span className="absolute top-4 right-4 bg-navy-deep/80 text-white text-[10px] font-mono px-3 py-1.5 rounded-full z-10">📷 {idx + 1}/{total}</span>
                       <button type="button" aria-label="Previous photo" onClick={(e) => { e.stopPropagation(); step(l.id, total, -1); }}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-navy-deep/70 hover:bg-navy-deep text-gold grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity">‹</button>
+                        className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-navy-deep/70 hover:bg-navy-deep text-gold grid place-items-center z-10 md:opacity-0 md:group-hover:opacity-100 transition-opacity">‹</button>
                       <button type="button" aria-label="Next photo" onClick={(e) => { e.stopPropagation(); step(l.id, total, 1); }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-navy-deep/70 hover:bg-navy-deep text-gold grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity">›</button>
-                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-navy-deep/70 hover:bg-navy-deep text-gold grid place-items-center z-10 md:opacity-0 md:group-hover:opacity-100 transition-opacity">›</button>
+                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
                         {urls.map((_, i) => (
                           <button key={i} type="button" aria-label={`Go to photo ${i + 1}`} onClick={(e) => { e.stopPropagation(); setActiveIdx((s) => ({ ...s, [l.id]: i })); }}
-                            className={`w-1.5 h-1.5 rounded-full transition-all ${i === idx ? "bg-gold w-4" : "bg-white/50"}`} />
+                            className={`h-1.5 rounded-full transition-all ${i === idx ? "bg-gold w-4" : "bg-white/50 w-1.5"}`} />
                         ))}
                       </div>
                     </>
