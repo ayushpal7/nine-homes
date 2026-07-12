@@ -95,6 +95,22 @@ Deno.serve(async (req) => {
         if (error) throw error;
         return json({ ok: true });
       }
+      case "delete_inquiry": {
+        const { error } = await admin.from("inquiries").delete().eq("id", String(payload.id));
+        if (error) throw error;
+        return json({ ok: true });
+      }
+      case "delete_listing": {
+        // best-effort remove stored images
+        const { data: row } = await admin.from("listing_submissions").select("image_urls").eq("id", String(payload.id)).maybeSingle();
+        const paths = (row as any)?.image_urls ?? [];
+        if (Array.isArray(paths) && paths.length) {
+          await admin.storage.from(LISTING_BUCKET).remove(paths.filter((p: string) => p && !p.startsWith("http")));
+        }
+        const { error } = await admin.from("listing_submissions").delete().eq("id", String(payload.id));
+        if (error) throw error;
+        return json({ ok: true });
+      }
       case "sign_urls": {
         const bucket = String(payload.bucket ?? "");
         const paths = Array.isArray(payload.paths) ? payload.paths : [];
