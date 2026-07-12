@@ -3,13 +3,13 @@ import emailjs from "@emailjs/browser";
 import { supabase } from "@/integrations/supabase/client";
 import {
   EMAILJS_PUBLIC_KEY,
-  EMAILJS_SERVICE_ID,
   EMAILJS_TEMPLATE_EXPLORE,
   Field,
   PageShell,
   SectionLabel,
   SubmitSuccessDialog,
   WHATSAPP_URL,
+  EMAILJS_SERVICE_ID=service_uv65jow
 } from "@/lib/site";
 
 export default function ExplorePage() {
