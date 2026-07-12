@@ -120,22 +120,26 @@ export default function AdminPage() {
 function InquiriesTab({ pw }: { pw: string }) {
   const [rows, setRows] = useState<any[]>([]);
   const [error, setError] = useState("");
-  useEffect(() => {
-    if (!pw) return;
-    adminCall<{ rows: any[] }>(pw, "list_inquiries")
-      .then((d) => setRows(d.rows ?? []))
-      .catch((e) => setError(e.message));
-  }, [pw]);
+  const load = () => adminCall<{ rows: any[] }>(pw, "list_inquiries")
+    .then((d) => setRows(d.rows ?? []))
+    .catch((e) => setError(e.message));
+  useEffect(() => { if (pw) load(); /* eslint-disable-next-line */ }, [pw]);
+  const remove = async (id: string) => {
+    if (!confirm("Delete this inquiry?")) return;
+    try { await adminCall(pw, "delete_inquiry", { id }); setRows((r) => r.filter((x) => x.id !== id)); }
+    catch (e: any) { alert("Delete failed: " + e.message); }
+  };
   return (
     <div className="space-y-3">
       <p className="font-mono text-xs text-white/60">{rows.length} inquiry submissions</p>
       {error && <p className="rounded-xl gold-border bg-navy-deep p-5 text-sm text-white/80">{error}</p>}
       {rows.map((r) => (
-        <div key={r.id} className="rounded-xl gold-border bg-navy-deep p-5 grid sm:grid-cols-4 gap-3 text-sm">
+        <div key={r.id} className="rounded-xl gold-border bg-navy-deep p-5 grid sm:grid-cols-5 gap-3 text-sm">
           <div><div className="text-[10px] gold-text font-mono uppercase">When</div>{new Date(r.created_at).toLocaleString()}</div>
           <div><div className="text-[10px] gold-text font-mono uppercase">Name</div>{r.name}<br/><a href={`tel:${r.mobile}`} className="text-gold">{r.mobile}</a>{r.email && <><br/><span className="text-white/70 text-xs">{r.email}</span></>}</div>
           <div><div className="text-[10px] gold-text font-mono uppercase">Intent</div>{r.intent} · {r.category}<br/><span className="text-white/70 text-xs">{r.city} · {r.sector}</span></div>
           <div><div className="text-[10px] gold-text font-mono uppercase">Budget / Notes</div>{r.budget}<br/><span className="text-white/70 text-xs">{r.requirements}</span></div>
+          <div className="flex items-start justify-end"><button onClick={() => remove(r.id)} className="text-xs px-3 py-2 rounded border border-red-500/40 text-red-300 hover:bg-red-500/10">Delete</button></div>
         </div>
       ))}
     </div>
@@ -151,6 +155,11 @@ function ListingsTab({ pw }: { pw: string }) {
       .then((d) => setRows(d.rows ?? []))
       .catch((e) => setError(e.message));
   }, [pw]);
+  const remove = async (id: string) => {
+    if (!confirm("Delete this listing submission? Uploaded photos will also be removed.")) return;
+    try { await adminCall(pw, "delete_listing", { id }); setRows((r) => r.filter((x) => x.id !== id)); }
+    catch (e: any) { alert("Delete failed: " + e.message); }
+  };
   return (
     <div className="space-y-3">
       <p className="font-mono text-xs text-white/60">{rows.length} owner submissions</p>
@@ -174,6 +183,9 @@ function ListingsTab({ pw }: { pw: string }) {
           ) : r.image_count ? (
             <p className="text-xs text-white/50 pt-2 border-t border-[rgba(212,175,55,0.15)]">📷 {r.image_count} photos (not uploaded — legacy submission)</p>
           ) : null}
+          <div className="flex justify-end pt-2 border-t border-[rgba(212,175,55,0.15)]">
+            <button onClick={() => remove(r.id)} className="text-xs px-3 py-2 rounded border border-red-500/40 text-red-300 hover:bg-red-500/10">Delete submission</button>
+          </div>
         </div>
       ))}
     </div>
