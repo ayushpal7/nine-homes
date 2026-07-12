@@ -9,8 +9,9 @@ import {
   SectionLabel,
   SubmitSuccessDialog,
   WHATSAPP_URL,
-  EMAILJS_SERVICE_ID=service_uv65jow
 } from "@/lib/site";
+
+const EMAILJS_SERVICE_ID = "service_uv65jow";
 
 export default function ExplorePage() {
   const initialType = new URLSearchParams(typeof window === "undefined" ? "" : window.location.search).get("type") === "rent" ? "rent" : "buy";
@@ -115,4 +116,4 @@ export default function ExplorePage() {
       />
     </PageShell>
   );
-}
+        }
