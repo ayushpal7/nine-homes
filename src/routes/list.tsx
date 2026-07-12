@@ -45,22 +45,29 @@ export default function ListPage() {
       payload.image_count = String(images.length);
       payload.image_names = images.map((i) => i.name).join(", ");
 
-      // Upload images to storage (private bucket)
-      const uploadedPaths = images.length > 0
-        ? await uploadFiles(LISTING_BUCKET, images.map((i) => i.file), `${Date.now()}/`)
-        : [];
+      // Upload images to storage (best-effort; don't fail submission if upload errors)
+      let uploadedPaths: string[] = [];
+      if (images.length > 0) {
+        try {
+          uploadedPaths = await uploadFiles(LISTING_BUCKET, images.map((i) => i.file), `${Date.now()}/`);
+        } catch (upErr) {
+          console.warn("Image upload failed (non-blocking):", upErr);
+        }
+      }
 
-      await Promise.all([
-        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_LIST, payload, { publicKey: EMAILJS_PUBLIC_KEY }),
-        supabase.from("listing_submissions").insert({
-          purpose: payload.purpose, category: payload.category,
-          name: payload.name, mobile: payload.mobile, email: payload.email || null,
-          city: payload.city, address: payload.address, pincode: payload.pincode,
-          size: payload.size, price: payload.price, spec_details: payload.spec_details,
-          image_names: payload.image_names, image_count: images.length,
-          image_urls: uploadedPaths,
-        }),
-      ]);
+      const { error: dbError } = await supabase.from("listing_submissions").insert({
+        purpose: payload.purpose, category: payload.category,
+        name: payload.name, mobile: payload.mobile, email: payload.email || null,
+        city: payload.city, address: payload.address, pincode: payload.pincode,
+        size: payload.size, price: payload.price, spec_details: payload.spec_details,
+        image_names: payload.image_names, image_count: images.length,
+        image_urls: uploadedPaths,
+      });
+      if (dbError) throw dbError;
+
+      // Email is best-effort
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_LIST, payload, { publicKey: EMAILJS_PUBLIC_KEY })
+        .catch((e) => console.warn("EmailJS failed (non-blocking):", e));
       setStatus("ok");
       formRef.current.reset();
       setImages([]);

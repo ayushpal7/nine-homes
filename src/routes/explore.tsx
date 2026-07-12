@@ -29,14 +29,15 @@ export default function ExplorePage() {
     const fd = new FormData(formRef.current);
     const get = (k: string) => String(fd.get(k) ?? "");
     try {
-      await Promise.all([
-        emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_EXPLORE, formRef.current, { publicKey: EMAILJS_PUBLIC_KEY }),
-        supabase.from("inquiries").insert({
-          intent: get("intent") || type, category: get("category"), city: get("city"),
-          name: get("name"), mobile: get("mobile"), email: get("email") || null,
-          budget: get("budget"), sector: get("sector"), requirements: get("requirements"),
-        }),
-      ]);
+      const { error: dbError } = await supabase.from("inquiries").insert({
+        intent: get("intent") || type, category: get("category"), city: get("city"),
+        name: get("name"), mobile: get("mobile"), email: get("email") || null,
+        budget: get("budget"), sector: get("sector"), requirements: get("requirements"),
+      });
+      if (dbError) throw dbError;
+      // Email is best-effort; don't fail the submission if EmailJS is down/over quota.
+      emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_EXPLORE, formRef.current, { publicKey: EMAILJS_PUBLIC_KEY })
+        .catch((e) => console.warn("EmailJS failed (non-blocking):", e));
       setStatus("ok");
       formRef.current.reset();
     } catch (err) {
